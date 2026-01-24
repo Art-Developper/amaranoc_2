@@ -1,6 +1,6 @@
 "use client"
 
-import { User, Globe, Search, Facebook, Instagram, Phone, Mail, Map } from "lucide-react";
+import { User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
