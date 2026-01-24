@@ -56,6 +56,48 @@ export default function Sales(){
           </div>
         </div>
       </div>
+
+      <div className=" bg-[#101623ff] text-white">
+        <div className="flex justify-center items-center">
+          <h1 className="text-3xl my-4">ԿՈՆՏԱԿՏՆԵՐ</h1>
+        </div>
+        <div className="flex flex-wrap justify-center items-center gap-8 p-4 bg-gray-900 text-white">
+          <div className="flex items-center gap-2">
+            <Phone size={20} />
+            <span className="text-sm">041-611-611 / 044-611-611</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Mail size={20} />
+            <span className="text-sm text-gray-300">AMARANOC.INFO@GMAIL.COM</span>
+          </div>
+          <a href="#" className="flex items-center gap-2">
+            <Instagram size={20} />
+            <span className="text-sm font-medium">AMARANOC.AM</span>
+          </a>
+          <a href="#" className="flex items-center gap-2">
+            <Facebook size={20} />
+            <span className="text-sm font-medium">AMARANOC.AM</span>
+          </a>
+          <div className="flex items-center gap-2">
+            <MapPin size={20} />
+            <span className="text-sm ">ԹՈՒՄԱՆՅԱՆ 5</span>
+          </div>
+        </div>
+        <div className="flex justify-center my-3.5">
+          <p className="underline">Գաղտնիության քաղաքականություն</p>
+        </div>
+        <div className="flex justify-center my-2.5">
+          <p>Ամառանոց ՍՊԸ | Amaranoc LLC | Амараноц OOO</p>
+        </div>
+        <div>
+          <Image
+            src="/image/footer-background.webp"
+            alt="footer image"
+            width={1920}
+            height={140}
+          ></Image>
+        </div>
+      </div>
     </>
   );
 }
