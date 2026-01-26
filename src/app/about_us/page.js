@@ -56,6 +56,42 @@ export default function About(){
         </div>
       </div>
 
+      <div className="bg-black text-white flex justify-center w-auto ">
+        <div className=" border-1 rounded-2xl  mx-auto my-16  max-w-6xl w-full flex flex-wrap justify-center">
+          <div className="flex justify-center items-center gap-8 px-10 pt-20">
+            <div className="w-60 h-0.5 bg-white"></div>
+            <div><h1 className="text-3xl">ՏԵՂԱԴՐԵԼ ՀԱՅՏԱՐԱՐՈՒԹՅՈՒՆ</h1></div>
+            <div className="w-60 h-0.5 bg-white"></div>
+          </div>
+          <div className="flex justify-center pt-6">
+            <p>Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
+          </div>
+          <div className="flex justify-center items-center gap-4 pt-6 pb-20">
+            <input 
+              type="text"
+              placeholder="Անուն Ազգանուն"
+              className="border-1 rounded-2xl  px-10 py-2 w-full"
+            ></input>
+            <input
+              type="phone"
+              placeholder="Հեռախոահամար"
+              className="border-1 rounded-2xl  px-10 py-2 w-full"
+            >
+            </input>
+            <input
+              type="mail"
+              placeholder="Էլ․ Հասցե"
+              className="border-1 rounded-2xl  px-10 py-2 w-full"
+            >
+            </input>
+            <button 
+              className="border-1 border-orange-400 rounded-3xl px-6 py-2 bg-orange-400"
+            >Ուղարկել</button>
+          </div>
+        </div>
+      </div>
+
+
       <div className=" bg-[#101623ff] text-white">
         <div className="flex justify-center items-center">
           <h1 className="text-3xl my-4">ԿՈՆՏԱԿՏՆԵՐ</h1>
