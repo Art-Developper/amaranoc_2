@@ -9,7 +9,7 @@ import { User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin, ChevronL
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
-import { categories, servicesData } from './servicesData';
+import { categories, servicesData } from './serviceData';
 
 export default function Service() {
   const pathName = usePathname();
