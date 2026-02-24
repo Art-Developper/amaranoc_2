@@ -9,9 +9,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
+import fetch, { fetchData } from "@/lib/api.js";
 
 export default function Home() {
   const pathName = usePathname();
+  const [houses,setHouses] = useState([])
 
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
@@ -24,6 +26,12 @@ export default function Home() {
       setShowRight(scrollLeft < scrollWidth - clientWidth - 10);
     }
   };
+
+  useEffect(()=>{
+    fetchData('houses').then(data =>{
+      setHouses(data)
+    })
+  })
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -69,18 +77,6 @@ export default function Home() {
     { id: 14, label: "Բնակարաններ", icon: Building2 },
   ];
 
-  const houses = [
-    { id: 1, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1759149473223--0.33907271602966693image.webp&w=1920&q=75", location: "Գառնի", price: "45,000 ֏", people: "6", rating: "5" },
-    { id: 2, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1768642248614--0.5149213932422279image.webp&w=1920&q=75", location: "Դիլիջան", price: "35,000 ֏", people: "4", rating: "0" },
-    { id: 3, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1758095203425--0.034694092059661896image.webp&w=1920&q=75", location: "Ծաղկաձոր", price: "250,000 ֏", people: "12", rating: "4.9" },
-    { id: 4, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1759149473223--0.33907271602966693image.webp&w=1920&q=75", location: "Բջնի", price: "40,000 ֏", people: "4-6", rating: "4.8" },
-    { id: 5, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1753697519352--0.8706588573375771image.webp&w=1920&q=75", location: "Օհանավան", price: "75,000 ֏", people: "2-4", rating: "5.0" },
-    { id: 6, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1766738569225--0.12206903448369033image.webp&w=1920&q=75", location: "Սևան", price: "150,000 ֏", people: "40", rating: "4" },
-    { id: 7, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1762686772282--0.7753343924665224image.webp&w=1920&q=75", location: "Օհանավան", price: "80,000 ֏", people: "25", rating: "5" },
-    { id: 8, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1763196873802--0.32875657677659165image.webp&w=1920&q=75", location: "Ծաղկաձոր", price: "100,000 ֏", people: "20", rating: "4.5" },
-    { id: 9, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1769175140647--0.2972160378325819image.webp&w=1920&q=75", location: "Դիլիջան", price: "60,000 ֏", people: "12", rating: "0" },
-    { id: 10, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1768485493875--0.11421439312574466image.webp&w=1920&q=75", location: "Բազմաղբյուր", price: "80,000 ֏", people: "25", rating: "0" },
-  ];
   return (
     <div className="min-h-screen bg-white">
       <div className="flex justify-between items-center max-w-[1440px] mx-auto py-7 px-4">

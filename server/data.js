@@ -34,24 +34,6 @@ export const houses = [
     { id: 10, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1768485493875--0.11421439312574466image.webp&w=1920&q=75", location: "Բազմաղբյուր", price: "80,000 ֏", people: "25", rating: "0" },
 ];
 
-export const categories = [
-    { id: 1, label: "Առանձնատներ", iconName: "Home" },
-    { id: 2, label: "Frame houses", iconName: "Pyramid" },
-    { id: 3, label: "Տնակներ", iconName: "Warehouse" },
-    { id: 4, label: "Փակ լողավազան", iconName: "Waves" },
-    { id: 5, label: "Աղմուկից հեռու", iconName: "Trees" },
-    { id: 6, label: "Շքեղ տեսարան", iconName: "Mountain" },
-    { id: 7, label: "Պահանջված", iconName: "Flame" },
-    { id: 8, label: "Լճի ափին", iconName: "Palmtree" },
-    { id: 9, label: "Սպասարկում", iconName: "HandPlatter" },
-    { id: 10, label: "Շոու", iconName: "WandSparkles" },
-    { id: 11, label: "Միջոցառումներ", iconName: "PartyPopper" },
-    { id: 12, label: "Տեխնիկա", iconName: "Rocket" },
-    { id: 13, label: "Օրավարձով գույք", iconName: "UtensilsCrossed" },
-    { id: 14, label: "Նկարահանում", iconName: "Video" },
-    { id: 15, label: "Ուղևորափոխադրում", iconName: "CarFront" },
-];
-
 export const servicesData = {
     "Սպասարկում": [
         { id: 1, title: "Մատուցող", description: "Յուրաքանյչուր մատուցող կարող է սպասարկել 15-20 անձի։", image: "/image/service/1724331775249--0.webp", price: 20000 },

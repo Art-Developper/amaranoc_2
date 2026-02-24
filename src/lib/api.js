@@ -1,6 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const fetchData = async (endpoint) => {
+export const fetchData = async (path) => {
     try{
         const response = await fetch(`${API_URL}/${path}`);
         if (!response.ok) throw new Error("Not Found")

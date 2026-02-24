@@ -1,27 +1,49 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import { User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin, ChevronLeft, ChevronRight, Tag } from "lucide-react";
+import {
+  User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin, ChevronLeft, ChevronRight, Tag,  HandPlatter, WandSparkles, PartyPopper, Rocket,
+  UtensilsCrossed, Video, CarFront
+} from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
-import { categories, servicesData } from './serviceData';
+import { fetch, fetchData } from "@/lib/api.js"
 
 export default function Service() {
   const pathName = usePathname();
   const [activeTab, setActiveTab] = useState("Սպասարկում");
+  const [servicesData, setServicesData] = useState([])
 
   const activeServices = servicesData[activeTab] || [];
+
+  const categories = [
+    { name: "Սպասարկում", icon: <HandPlatter size={28} /> },
+    { name: "Շոու", icon: <WandSparkles size={28} /> },
+    { name: "Միջոցառումներ", icon: <PartyPopper size={28} /> },
+    { name: "Տեխնիկա", icon: <Rocket size={28} /> },
+    { name: "Օրավարձով գույք", icon: <UtensilsCrossed size={28} /> },
+    { name: "Նկարահանում", icon: <Video size={28} /> },
+    { name: "Ուղևորափոխադրում", icon: <CarFront size={28} /> },
+  ];
 
   const linkClass = (path) =>
     `relative pb-1 transition-all
      ${pathName === path ? "after:w-full" : "after:w-0 hover:after:w-full"}
      after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px]
      after:bg-orange-500 after:transition-all after:duration-300`;
+
+  useEffect(() => {
+    fetchData('services').then(data => {
+      if (data) {
+        setServicesData(data);
+      }
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
