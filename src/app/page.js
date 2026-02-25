@@ -89,7 +89,7 @@ export default function Home() {
         </div>
         <div className="flex gap-5 items-center">
           <Globe className="w-5 h-5 cursor-pointer" />
-          <User className="w-5 h-5 cursor-pointer" />
+          <Link className={linkClass("/login")} href="./login"><User className="w-5 h-5 cursor-pointer" /></Link>
           <div className="relative">
             <input type="text" placeholder="Որոնում" className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none" />
             <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -207,7 +207,7 @@ export default function Home() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-[22px] font-black text-[#343a4a]">
-                      <Tag size={22} className="text-orange-400" /> {house.price} <span className="font-normal text-xl ml-1">֏</span>
+                      <Tag size={22} className="text-orange-400" /> {house.price} <span className="font-normal text-xl ml-1"></span>
                     </div>
                   </div>
                 </div>

@@ -1,19 +1,34 @@
 "use client"
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin, Heart, CheckCircle2, X, Star, Users } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
-import { discounts, prices, houses } from './salesData';
+import { fetchData } from "@/lib/api";
 
 export default function Sales() {
   const pathName = usePathname();
+
+  const [salesData, setSalesData] = useState({
+    discounts: [],
+    prices: [],
+    salesHouses: []
+  })
 
   const [selectedPrice, setSelectedPrice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [bookingStep, setBookingStep] = useState(1);
   const [formData, setFormData] = useState({ recipientName: '', phoneNumber: '' });
+
+  useEffect(() => {
+    fetchData('sales').then(data => {
+      if (data) {
+        setSalesData(data);
+      }
+    });
+  }, []);
+
 
   const linkClass = (path) =>
     `relative pb-1 transition-all
@@ -72,7 +87,7 @@ export default function Sales() {
       <div className="py-10">
         <h2 className="text-center text-4xl font-bold mb-10 uppercase">ՀԱՏՈՒԿ ԶԵՂՉԵՐ</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 px-10 gap-8">
-          {discounts.map((item, index) => (
+          {salesData.discounts.map((item, index) => (
             <div key={index} className="relative rounded-xl overflow-hidden shadow-lg h-80 group">
               <img src={item.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               <div className="absolute inset-0 bg-black/50 flex flex-col justify-end p-5 text-white">
@@ -101,7 +116,7 @@ export default function Sales() {
         <div className="rounded-3xl p-10 shadow-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white flex flex-col items-center">
           <img src="https://amaranoc.am/images/white-logo.svg" alt="Logo" className="w-48 mb-10 opacity-90" />
           <div className="flex flex-wrap gap-4 justify-center mb-10">
-            {prices.map((price, i) => (
+            {salesData.prices.map((price, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedPrice(price)}
@@ -121,7 +136,7 @@ export default function Sales() {
       <div className="py-10">
         <h1 className='text-center text-4xl font-bold mb-10 uppercase italic'>Թեժ առաջարկներ</h1>
         <div className="grid grid-cols-1 px-10 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {houses.map((item) => (
+          {salesData.salesHouses.map((item) => (
             <Link key={item.id} href={`/houses/${item.id}`} className="bg-white rounded-2xl overflow-hidden shadow-lg group">
               <div className="relative h-60">
                 <img src={item.image} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="" />
