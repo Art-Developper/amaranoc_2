@@ -16,6 +16,10 @@ export default function Sales() {
     salesHouses: []
   })
 
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   const [selectedPrice, setSelectedPrice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [bookingStep, setBookingStep] = useState(1);
@@ -28,6 +32,32 @@ export default function Sales() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/profile", {
+      credentials: "include"
+    })
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setUser(null);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("http://localhost:5000/api/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+    setUser(null);
+  };
 
 
   const linkClass = (path) =>
@@ -52,34 +82,36 @@ export default function Sales() {
 
   return (
     <>
-      <div className="flex justify-center items-center gap-74.5 my-7">
-        <div className="flex items-start justify-start">
-          <Link href="/">
-            <img src="/logo.svg" alt="Logo" width="170" />
-          </Link>
-        </div>
-        <div className="flex items-center justify-center gap-10">
+      <div className="flex justify-between items-center max-w-[1440px] mx-auto py-7 px-4">
+        <Link href="/"><img src="/logo.svg" alt="Logo" width="170" /></Link>
+        <div className="flex items-center gap-10 font-medium text-sm text-gray-700">
           <Link className={linkClass("/")} href="/">Գլխավոր</Link>
           <Link className={linkClass("/sales")} href="/sales">Զեղչեր</Link>
           <Link className={linkClass("/service")} href="/service">Ծառայություններ</Link>
           <Link className={linkClass("/about_us")} href="/about_us">Մեր մասին</Link>
         </div>
-        <div className="flex gap-5 justify-end items-center">
-          <button>
-            <Globe className="w-5 h-5" />
-          </button>
-
-          <button>
-            <User className="w-5 h-5" />
-          </button>
-
+        <div className="flex gap-5 items-center">
+          <Globe className="w-5 h-5 cursor-pointer" />
+          {loading ? null : user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-semibold">
+                {user.name}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-red-500 hover:underline"
+              >
+                Դուրս գալ
+              </button>
+            </div>
+          ) : (
+            <Link className={linkClass("/login")} href="/login">
+              <User className="w-5 h-5 cursor-pointer" />
+            </Link>
+          )}
           <div className="relative">
-            <input
-              type="text"
-              placeholder="Որոնում"
-              className="pl-10 pr-2 py-2 border  rounded-3xl"
-            />
-            <Search className="w-4 h-4 absolute left-54 top-1/2 -translate-y-1/2" />
+            <input type="text" placeholder="Որոնում" className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none" />
+            <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
         </div>
       </div>

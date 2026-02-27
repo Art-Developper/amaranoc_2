@@ -9,30 +9,44 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
-import fetch, { fetchData } from "@/lib/api.js";
+import { fetchData } from "@/lib/api.js";
 
 export default function Home() {
   const pathName = usePathname();
-  const [houses,setHouses] = useState([])
+  const [houses, setHouses] = useState([])
 
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
 
-  const checkScroll = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setShowLeft(scrollLeft > 10);
-      setShowRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
-    fetchData('houses').then(data =>{
+
+  useEffect(() => {
+    fetchData('houses').then(data => {
       setHouses(data)
     })
-  })
+  }, []);
 
+  useEffect(() => {
+    fetch("http://localhost:5000/api/profile", {
+      credentials: "include"
+    })
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setUser(null);
+        setLoading(false);
+      });
+  }, []);
+  
   useEffect(() => {
     const el = scrollRef.current;
     if (el) {
@@ -45,6 +59,24 @@ export default function Home() {
       };
     }
   }, []);
+
+  const handleLogout = async () => {
+    await fetch("http://localhost:5000/api/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+    setUser(null);
+  };
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setShowLeft(scrollLeft > 10);
+      setShowRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -89,7 +121,23 @@ export default function Home() {
         </div>
         <div className="flex gap-5 items-center">
           <Globe className="w-5 h-5 cursor-pointer" />
-          <Link className={linkClass("/login")} href="./login"><User className="w-5 h-5 cursor-pointer" /></Link>
+          {loading ? null : user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-semibold">
+                {user.name}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-red-500 hover:underline"
+              >
+                Դուրս գալ
+              </button>
+            </div>
+          ) : (
+            <Link className={linkClass("/login")} href="/login">
+              <User className="w-5 h-5 cursor-pointer" />
+            </Link>
+          )}
           <div className="relative">
             <input type="text" placeholder="Որոնում" className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none" />
             <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -98,7 +146,7 @@ export default function Home() {
       </div>
 
       <div className="max-w-[1440px] mx-auto px-4 flex gap-10 mt-6">
-        
+
         <aside className="w-[320px] flex-shrink-0 flex flex-col gap-8 border border-gray-100 rounded-[35px] p-8 h-fit sticky top-5 shadow-sm overflow-y-auto max-h-[90vh] no-scrollbar">
           <section>
             <h3 className="font-bold text-lg mb-4">Տարածաշրջան</h3>
@@ -133,9 +181,9 @@ export default function Home() {
           <section>
             <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Մարդկանց թույլատրելի քանակ</h3>
             <div className="flex items-center gap-4">
-              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Minus size={18}/></button>
+              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Minus size={18} /></button>
               <input type="text" value="1" className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" readOnly />
-              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Plus size={18}/></button>
+              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Plus size={18} /></button>
             </div>
           </section>
 
@@ -149,7 +197,7 @@ export default function Home() {
         </aside>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          
+
           <div className="flex gap-4 mb-6">
             <button className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:bg-gray-50 text-sm font-semibold">
               Քարտեզ <Map size={18} />
@@ -248,7 +296,7 @@ export default function Home() {
           <p>Ամառանոց ՍՊԸ | Amaranoc LLC | Амараноц OOO</p>
         </div>
         <div className="w-full relative h-40">
-           <Image src="/image/footer-background.webp" alt="footer" fill className="object-cover opacity-40" />
+          <Image src="/image/footer-background.webp" alt="footer" fill className="object-cover opacity-40" />
         </div>
       </div>
     </div>

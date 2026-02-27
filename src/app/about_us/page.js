@@ -5,12 +5,14 @@ import { User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin } from "l
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation";
-import { useEffect,useState } from 'react';
-import { fetch, fetchData } from "@/lib/api.js"
+import { useEffect, useState } from 'react';
+import { fetchData } from "@/lib/api.js"
 
 export default function About() {
 
-  const [sectionData,setSectionData] = useState([])
+  const [sectionData, setSectionData] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const pathName = usePathname();
 
@@ -29,14 +31,41 @@ export default function About() {
      after:transition-all
      after:duration-300`;
 
-      useEffect(() => {
-         fetchData('about').then(data => {
-           if (data) {
-             setSectionData(data);
-           }
-         });
-       }, []);
-     
+  useEffect(() => {
+    fetchData('about').then(data => {
+      if (data) {
+        setSectionData(data);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/profile", {
+      credentials: "include"
+    })
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setUser(null);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("http://localhost:5000/api/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+    setUser(null);
+  };
+
+
 
   return (
     <>
@@ -73,28 +102,44 @@ export default function About() {
           </div>
 
           <div className="flex gap-5 justify-end items-center text-white">
-            <button className="hover:text-orange-400 transition">
-              <Globe className="w-5 h-5" />
-            </button>
+            <div className="flex gap-5 justify-end items-center text-white">
+              <button className="hover:text-orange-400 transition">
+                <Globe className="w-5 h-5" />
+              </button>
 
-            <button className="hover:text-orange-400 transition">
-              <User className="w-5 h-5" />
-            </button>
+              {loading ? null : user ? (
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-orange-400">
+                    {user.name}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm bg-orange-500 hover:bg-orange-600 px-4 py-1 rounded-full transition"
+                  >
+                    Դուրս գալ
+                  </button>
+                </div>
+              ) : (
+                <Link href="/login" className="hover:text-orange-400 transition">
+                  <User className="w-5 h-5" />
+                </Link>
+              )}
 
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Որոնում"
-                className="pl-4 pr-10 py-2 bg-white/10 border border-white/30 rounded-3xl text-white placeholder:text-gray-300 focus:outline-none focus:bg-white/20 backdrop-blur-sm"
-              />
-              <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2" />
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Որոնում"
+                  className="pl-4 pr-10 py-2 bg-white/10 border border-white/30 rounded-3xl text-white placeholder:text-gray-300 focus:outline-none focus:bg-white/20 backdrop-blur-sm"
+                />
+                <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2" />
+              </div>
             </div>
           </div>
         </header>
       </div>
 
       <section className="bg-gray-50 pt-16 font-sans">
-        <div className="w-full space-y-20"> 
+        <div className="w-full space-y-20">
 
           {sectionData.map((section, index) => (
             <React.Fragment key={section.id}>

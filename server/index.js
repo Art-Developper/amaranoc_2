@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { houses, salesHouses, discounts, servicesData, sectionData, prices } from "./data.js";
@@ -12,8 +13,17 @@ const users = [];
 
 
 let app = express();
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000", 
+  credentials: true
+}));
 app.use(express.json());
+app.use(session({
+    secret: "MarmokJohanOlegCoffiJanagaCristianoRonaldoMessiLeonel", 
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.session());
 app.use(passport.initialize());
 
 app.post("/api/register", async (req, res) => {
@@ -49,16 +59,16 @@ app.post("/api/login", (req, res, next) => {
         if (err) return res.status(500).json({ success: false, message: "Սերվերի սխալ" });
         if (!user) return res.status(401).json({ success: false, message: info.message });
 
-        req.logIn(user,(err)=>{
-            if(err) return res.status(500).json({success: false,message: "Մուքտի սխալ"});
+        req.logIn(user, (err) => {
+            if (err) return res.status(500).json({ success: false, message: "Մուքտի սխալ" });
 
             return res.json({
                 success: true,
                 message: "Բարի գալուստ",
-                user: {name: user.name, email: user.email}
+                user: { name: user.name, email: user.email }
             })
         })
-    })(req,res,next)
+    })(req, res, next)
 })
 
 passport.use(new LocalStrategy(
@@ -86,7 +96,26 @@ passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser((id, done) => {
     const user = users.find(u => u.id === id);
     done(null, user)
-})
+});
+
+app.post("/api/logout", (req, res) => {
+    req.logout(function(err) {
+        if (err) return res.status(500).json({ message: "Logout error" });
+        res.json({ success: true });
+    });
+});
+
+app.get("/api/profile", (req, res) => {
+    if (req.isAuthenticated()) {
+        return res.json({
+            name: req.user.name,
+            email: req.user.email
+        });
+    }
+    res.status(401).json({ message: "Not authenticated" });
+});
+
+
 
 app.get("/api/houses", (req, res) => {
     res.json(houses);

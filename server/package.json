@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "server" : "nodemon --require dotenv/config index.js"
+    "server": "nodemon --require dotenv/config index.js"
   },
   "keywords": [],
   "author": "",
@@ -14,9 +14,10 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "nodemon": "^3.1.14",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0"
   },
-  "type" : "module"
+  "type": "module"
 }
