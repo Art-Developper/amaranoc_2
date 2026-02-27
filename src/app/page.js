@@ -18,7 +18,7 @@ export default function Home() {
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +46,7 @@ export default function Home() {
         setLoading(false);
       });
   }, []);
-  
+
   useEffect(() => {
     const el = scrollRef.current;
     if (el) {
@@ -59,6 +59,15 @@ export default function Home() {
       };
     }
   }, []);
+
+  useEffect(() => {
+    const endpoint = searchQuery ? `houses?search=${searchQuery}` : 'houses';
+
+    fetchData(endpoint).then(data => {
+      if (data) setHouses(data);
+    });
+  }, [searchQuery]);
+
 
   const handleLogout = async () => {
     await fetch("http://localhost:5000/api/logout", {
@@ -139,7 +148,11 @@ export default function Home() {
             </Link>
           )}
           <div className="relative">
-            <input type="text" placeholder="Որոնում" className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none" />
+            <input
+              type="text"
+              placeholder="Որոնում" value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none" />
             <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
         </div>

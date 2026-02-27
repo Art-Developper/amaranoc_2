@@ -118,6 +118,15 @@ app.get("/api/profile", (req, res) => {
 
 
 app.get("/api/houses", (req, res) => {
+    const { search } = req.query;
+
+    if (search) {
+        const filteredHouses = houses.filter(house =>
+            house.location.toLowerCase().includes(search.toLowerCase())
+        );
+        return res.json(filteredHouses);
+    }
+
     res.json(houses);
 });
 
