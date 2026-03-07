@@ -14,12 +14,12 @@ const users = [];
 
 let app = express();
 app.use(cors({
-  origin: "http://localhost:3000", 
-  credentials: true
+    origin: "http://localhost:3000",
+    credentials: true
 }));
 app.use(express.json());
 app.use(session({
-    secret: "MarmokJohanOlegCoffiJanagaCristianoRonaldoMessiLeonel", 
+    secret: "MarmokJohanOlegCoffiJanagaCristianoRonaldoMessiLeonel",
     resave: false,
     saveUninitialized: false
 }));
@@ -99,7 +99,7 @@ passport.deserializeUser((id, done) => {
 });
 
 app.post("/api/logout", (req, res) => {
-    req.logout(function(err) {
+    req.logout(function (err) {
         if (err) return res.status(500).json({ message: "Logout error" });
         res.json({ success: true });
     });
@@ -119,11 +119,15 @@ app.get("/api/profile", (req, res) => {
 
 app.get("/api/houses", (req, res) => {
     const { search } = req.query;
-
     if (search) {
+        const pattern = search.split("").join(".*");
+
+        const regex = new RegExp(pattern, "i");
+
         const filteredHouses = houses.filter(house =>
-            house.location.toLowerCase().includes(search.toLowerCase())
+            regex.test(house.location) 
         );
+
         return res.json(filteredHouses);
     }
 

@@ -145,7 +145,7 @@ export default function Home() {
           ) : (
             <Link className={linkClass("/login")} href="/login">
               <User className="w-5 h-5 cursor-pointer" />
-            </Link>
+            </Link>                                                         
           )}
           <div className="relative">
             <input
