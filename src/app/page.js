@@ -13,39 +13,62 @@ import { fetchData } from "@/lib/api.js";
 
 export default function Home() {
   const pathName = usePathname();
-  const [houses, setHouses] = useState([])
-
+  const [houses, setHouses] = useState([]);
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  
+  const [searchQuery, setSearchQuery] = useState(""); 
+  const [selectedRegions, setSelectedRegions] = useState([]); 
+  const [minPrice, setMinPrice] = useState(""); 
+  const [maxPrice, setMaxPrice] = useState(""); 
+  const [peopleCount, setPeopleCount] = useState(1); 
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (searchQuery) params.append('search', searchQuery);
+    if (minPrice) params.append('minPrice', minPrice);
+    if (maxPrice) params.append('maxPrice', maxPrice);
+    if (peopleCount > 1) params.append('people', peopleCount);
+
+    selectedRegions.forEach(reg => params.append('region', reg));
+
+    fetchData(`houses?${params.toString()}`).then(data => {
+      if (data) setHouses(data);
+    });
+  }, [searchQuery, selectedRegions, minPrice, maxPrice, peopleCount]);
 
   useEffect(() => {
-    fetchData('houses').then(data => {
-      setHouses(data)
-    })
+    fetch("http://localhost:5000/api/profile", { credentials: "include" })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => { setUser(data); setLoading(false); })
+      .catch(() => { setUser(null); setLoading(false); });
   }, []);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/profile", {
-      credentials: "include"
-    })
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then(data => {
-        setUser(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setUser(null);
-        setLoading(false);
-      });
-  }, []);
+  const handleRegionChange = (regionName) => {
+    setSelectedRegions(prev =>
+      prev.includes(regionName)
+        ? prev.filter(r => r !== regionName) 
+        : [...prev, regionName] 
+    );
+  };
+
+  const handleLogout = async () => {
+    await fetch("http://localhost:5000/api/logout", { method: "POST", credentials: "include" });
+    setUser(null);
+  };
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setShowLeft(scrollLeft > 10);
+      setShowRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -59,33 +82,6 @@ export default function Home() {
       };
     }
   }, []);
-
-  useEffect(() => {
-    const endpoint = searchQuery ? `houses?search=${searchQuery}` : 'houses';
-
-    fetchData(endpoint).then(data => {
-      if (data) setHouses(data);
-    });
-  }, [searchQuery]);
-
-
-  const handleLogout = async () => {
-    await fetch("http://localhost:5000/api/logout", {
-      method: "POST",
-      credentials: "include"
-    });
-    setUser(null);
-  };
-
-  const checkScroll = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setShowLeft(scrollLeft > 10);
-      setShowRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -132,27 +128,20 @@ export default function Home() {
           <Globe className="w-5 h-5 cursor-pointer" />
           {loading ? null : user ? (
             <div className="flex items-center gap-4">
-              <span className="text-sm font-semibold">
-                {user.name}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-red-500 hover:underline"
-              >
-                Դուրս գալ
-              </button>
+              <span className="text-sm font-semibold">{user.name}</span>
+              <button onClick={handleLogout} className="text-sm text-red-500 hover:underline">Դուրս գալ</button>
             </div>
           ) : (
-            <Link className={linkClass("/login")} href="/login">
-              <User className="w-5 h-5 cursor-pointer" />
-            </Link>                                                         
+            <Link className={linkClass("/login")} href="/login"><User className="w-5 h-5 cursor-pointer" /></Link>
           )}
           <div className="relative">
             <input
               type="text"
-              placeholder="Որոնում" value={searchQuery}
+              placeholder="Որոնում"
+              value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none" />
+              className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none"
+            />
             <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
           </div>
         </div>
@@ -164,9 +153,14 @@ export default function Home() {
           <section>
             <h3 className="font-bold text-lg mb-4">Տարածաշրջան</h3>
             <div className="flex flex-col gap-4 max-h-[220px] overflow-y-auto no-scrollbar pr-2">
-              {["Օհանավան 5", "Աջինջ 4", "Հանքավան 4", "Դսեղ 4", "Վանաձոր 13", "Աբովյան 12", "Բջնի 8"].map((t) => (
+              {["Օհանավան", "Բջնի", "Դիլիջան", "Ծաղկաձոր", "Գառնի", "Սևան"].map((t) => (
                 <label key={t} className="flex items-center gap-3 cursor-pointer group">
-                  <input type="checkbox" className="w-5 h-5 rounded border-gray-300 accent-black cursor-pointer" />
+                  <input
+                    type="checkbox"
+                    checked={selectedRegions.includes(t)}
+                    onChange={() => handleRegionChange(t)}
+                    className="w-5 h-5 rounded border-gray-300 accent-black cursor-pointer"
+                  />
                   <span className="text-gray-600 text-sm group-hover:text-black">{t}</span>
                 </label>
               ))}
@@ -185,18 +179,36 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <input type="text" placeholder="Սկսած" className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50" />
+              <input
+                type="number"
+                placeholder="Սկսած"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50"
+              />
               <span className="text-gray-400">-</span>
-              <input type="text" placeholder="Մինչև" className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50" />
+              <input
+                type="number"
+                placeholder="Մինչև"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50"
+              />
             </div>
           </section>
 
           <section>
             <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Մարդկանց թույլատրելի քանակ</h3>
             <div className="flex items-center gap-4">
-              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Minus size={18} /></button>
-              <input type="text" value="1" className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" readOnly />
-              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Plus size={18} /></button>
+              <button
+                onClick={() => setPeopleCount(prev => Math.max(1, prev - 1))}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              ><Minus size={18} /></button>
+              <input type="text" value={peopleCount} className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" readOnly />
+              <button
+                onClick={() => setPeopleCount(prev => prev + 1)}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              ><Plus size={18} /></button>
             </div>
           </section>
 
@@ -244,17 +256,12 @@ export default function Home() {
           <main>
             <h2 className="text-[22px] font-bold text-gray-800 mb-8 tracking-tight">Լավագույն առաջարկներ</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {houses.map((house) => (
+              {houses.length > 0 ? houses.map((house) => (
                 <div key={house.id} className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card">
                   <div className="relative h-64 w-full overflow-hidden">
                     <img src={house.image} alt={house.location} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
                     <div className="absolute bottom-5 right-5 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all">
                       <Heart size={20} className="text-gray-800" />
-                    </div>
-                    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5">
-                      {[1, 2, 3, 4, 5, 6].map((_, i) => (
-                        <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === 0 ? "bg-white" : "bg-white/50"}`}></div>
-                      ))}
                     </div>
                   </div>
                   <div className="p-6 flex flex-col gap-5">
@@ -272,7 +279,9 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="col-span-full text-center py-20 text-gray-400 italic">Ոչինչ չի գտնվել</div>
+              )}
             </div>
           </main>
         </div>

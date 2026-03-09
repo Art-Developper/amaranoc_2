@@ -118,20 +118,36 @@ app.get("/api/profile", (req, res) => {
 
 
 app.get("/api/houses", (req, res) => {
-    const { search } = req.query;
+    const { search, region, minPrice, maxPrice, people } = req.query;
+    let filteredHouses = [...houses];
+
     if (search) {
-        const pattern = search.split("").join(".*");
-
-        const regex = new RegExp(pattern, "i");
-
-        const filteredHouses = houses.filter(house =>
-            regex.test(house.location) 
-        );
-
-        return res.json(filteredHouses);
+        const regex = new RegExp(search.split("").join(".*"), "i");
+        filteredHouses = filteredHouses.filter(h => regex.test(h.location));
     }
 
-    res.json(houses);
+    if (region) {
+        const regionsArray = Array.isArray(region) ? region : [region];
+        filteredHouses = filteredHouses.filter(h => regionsArray.includes(h.location));
+    }
+
+    if (people) {
+        filteredHouses = filteredHouses.filter(h => {
+            const capacity = parseInt(h.people.split('-').pop());
+            return capacity >= parseInt(people);
+        });
+    }
+
+    if (minPrice || maxPrice) {
+        filteredHouses = filteredHouses.filter(h => {
+            const price = parseInt(h.price.replace(/[^0-9]/g, ''));
+            const min = minPrice ? parseInt(minPrice) : 0;
+            const max = maxPrice ? parseInt(maxPrice) : Infinity;
+            return price >= min && price <= max;
+        });
+    }
+
+    res.json(filteredHouses);
 });
 
 app.get("/api/services", (req, res) => {
