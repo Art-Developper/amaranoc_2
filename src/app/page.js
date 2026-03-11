@@ -3,7 +3,7 @@
 import {
   User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin, Tag, Map, Calendar,
   ChevronRight, ChevronLeft, Home as HomeIcon, Pyramid, Warehouse, Waves, Trees,
-  Mountain, Flame, Palmtree, Coffee, Building, Layout, Key, Building2, Plus, Minus, Heart
+  Mountain, Flame, Palmtree, Coffee, Building, Layout, Key, Building2, Plus, Minus, Heart, X
 } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
@@ -17,12 +17,15 @@ export default function Home() {
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
-  
-  const [searchQuery, setSearchQuery] = useState(""); 
-  const [selectedRegions, setSelectedRegions] = useState([]); 
-  const [minPrice, setMinPrice] = useState(""); 
-  const [maxPrice, setMaxPrice] = useState(""); 
-  const [peopleCount, setPeopleCount] = useState(1); 
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRegions, setSelectedRegions] = useState([]);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [peopleCount, setPeopleCount] = useState(1);
+
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(new Date());
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +45,15 @@ export default function Home() {
     });
   }, [searchQuery, selectedRegions, minPrice, maxPrice, peopleCount]);
 
+  const getTodayDate = () => {
+    return new Date().toLocaleDateString('hy-AM', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   useEffect(() => {
     fetch("http://localhost:5000/api/profile", { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
@@ -52,8 +64,8 @@ export default function Home() {
   const handleRegionChange = (regionName) => {
     setSelectedRegions(prev =>
       prev.includes(regionName)
-        ? prev.filter(r => r !== regionName) 
-        : [...prev, regionName] 
+        ? prev.filter(r => r !== regionName)
+        : [...prev, regionName]
     );
   };
 
@@ -113,6 +125,34 @@ export default function Home() {
     { id: 13, label: "Նոր", icon: Key },
     { id: 14, label: "Բնակարաններ", icon: Building2 },
   ];
+
+  const monthNames = [
+    "ՀՈՒՆՎԱՐ", "ՓԵՏՐՎԱՐ", "ՄԱՐՏ", "ԱՊՐԻԼ", "ՄԱՅԻՍ", "ՀՈՒՆԻՍ",
+    "ՀՈՒԼԻՍ", "ՕԳՈՍՏՈՍ", "ՍԵՊՏԵՄԲԵՐ", "ՀՈԿՏԵՄԲԵՐ", "ՆՈՅԵՄԲԵՐ", "ԴԵԿՏԵՄԲԵՐ"
+  ];
+  const nextMonth = () => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)));
+  const prevMonth = () => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)));
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const firstDayOfMonth = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const calendarDays = [];
+
+  for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+    calendarDays.push({ day: daysInPrevMonth - i, currentMonth: false });
+  }
+
+  for (let i = 1; i <= daysInMonth; i++) {
+    calendarDays.push({ day: i, currentMonth: true });
+  }
+
+  const remainingSlots = 42 - calendarDays.length;
+  for (let i = 1; i <= remainingSlots; i++) {
+    calendarDays.push({ day: i, currentMonth: false });
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -214,9 +254,59 @@ export default function Home() {
 
           <section>
             <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Գիշերակացի առկայություն</h3>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <button className="px-8 py-2.5 rounded-full bg-[#1d2331] text-white text-sm">Բոլորը</button>
               <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">Այո</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">Ոչ</button>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Մարդկանց թույլատրելի քանակը գիշերակացով</h3>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setPeopleCount(prev => Math.max(1, prev - 1))}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              ><Minus size={18} /></button>
+              <input type="text" value={peopleCount} className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" readOnly />
+              <button
+                onClick={() => setPeopleCount(prev => prev + 1)}
+                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+              ><Plus size={18} /></button>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Սենյակների քանակ</h3>
+            <div className="flex flex-wrap gap-3">
+              <button className="px-8 py-2.5 rounded-full bg-[#1d2331] text-white text-sm">Բոլորը</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">1</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">2</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">3</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">4</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">5</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">6 և ավելի</button>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Սանհանգույցների քանակ</h3>
+            <div className="flex flex-wrap gap-3">
+              <button className="px-8 py-2.5 rounded-full bg-[#1d2331] text-white text-sm">Բոլորը</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">1</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">2</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">3 և ավելի</button>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Լողավազան</h3>
+            <div className="flex flex-wrap gap-3">
+              <button className="px-8 py-2.5 rounded-full bg-[#1d2331] text-white text-sm">Բոլորը</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">Բաց</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">Փակ</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">Տաքացվող</button>
+              <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">Առանց լողավազանի</button>
             </div>
           </section>
         </aside>
@@ -224,13 +314,77 @@ export default function Home() {
         <div className="flex-1 flex flex-col overflow-hidden">
 
           <div className="flex gap-4 mb-6">
-            <button className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:bg-gray-50 text-sm font-semibold">
-              Քարտեզ <Map size={18} />
-            </button>
-            <button className="flex items-center justify-center border border-gray-300 rounded-full w-10 h-10 hover:bg-gray-50">
+            <button
+              onClick={() => setIsCalendarOpen(true)}
+              className="flex items-center justify-center border border-gray-300 rounded-full w-10 h-10 hover:bg-gray-50">
               <Calendar size={18} />
             </button>
           </div>
+
+          {isCalendarOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-[20px] w-full max-w-[480px] shadow-2xl overflow-hidden border border-gray-100">
+
+                <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                  <h3 className="text-[18px] font-bold text-[#111827]">Նշեք Ձեր ցանկալի օրերը</h3>
+                  <button onClick={() => setIsCalendarOpen(false)} className="text-gray-400 hover:text-black transition-colors">
+                    <X size={22} />
+                  </button>
+                </div>
+
+                <div className="bg-[#ff9d43] text-white flex justify-between items-center px-6 py-3">
+                  <button onClick={prevMonth} className="p-1 hover:bg-white/20 rounded-full transition-all">
+                    <ChevronLeft size={24} />
+                  </button>
+                  <span className="text-[18px] font-bold tracking-widest uppercase">
+                    {monthNames[month]} {year}
+                  </span>
+                  <button onClick={nextMonth} className="p-1 hover:bg-white/20 rounded-full transition-all">
+                    <ChevronRight size={24} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-7 text-center py-4 border-b border-gray-100 bg-gray-50/50">
+                  {['երկ', 'երք', 'չոր', 'հնգ', 'ուրբ', 'շաբ', 'կիր'].map((day, i) => (
+                    <span key={day} className={`text-[13px] font-bold uppercase ${i >= 5 ? 'text-[#ff9d43]' : 'text-gray-400'}`}>
+                      {day}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-y-2 px-4 py-6 text-center">
+                  {calendarDays.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`
+              h-10 flex items-center justify-center text-[15px] font-bold rounded-lg transition-all
+              ${item.currentMonth
+                          ? 'text-[#111827] cursor-pointer hover:bg-orange-100 hover:text-orange-500'
+                          : 'text-gray-200'}
+            `}
+                    >
+                      {item.day}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end gap-4 p-6 pt-0 border-t border-gray-50 mt-2">
+                  <button
+                    onClick={() => setIsCalendarOpen(false)}
+                    className="px-8 py-2 text-[15px] font-bold text-gray-900 hover:bg-gray-100 rounded-full transition-all"
+                  >
+                    Փակել
+                  </button>
+                  <button
+                    className="px-10 py-3 bg-[#f1f2f4] text-gray-400 text-[15px] font-bold rounded-[20px] transition-all"
+                  >
+                    Հաստատել
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
 
           <div className="relative border-t border-gray-100 pt-8 mb-10 group">
             {showLeft && (
