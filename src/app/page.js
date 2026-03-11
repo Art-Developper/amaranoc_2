@@ -316,8 +316,8 @@ export default function Home() {
           <div className="flex gap-4 mb-6">
             <button
               onClick={() => setIsCalendarOpen(true)}
-              className="flex items-center justify-center border border-gray-300 rounded-full w-10 h-10 hover:bg-gray-50">
-              <Calendar size={18} />
+              className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm bg-white text-sm font-semibold">
+              <Calendar size={18} /> Օրացույց
             </button>
           </div>
 
@@ -441,18 +441,32 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="bg-black text-white py-20 mt-20">
-        <div className="max-w-6xl mx-auto border border-gray-700 rounded-3xl p-10 text-center">
+      <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
+
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/image/background/background.jpg"
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto border border-gray-700 rounded-3xl p-10 text-center">
           <div className="flex justify-center items-center gap-8 mb-10">
             <div className="w-40 h-px bg-white/30"></div>
             <h2 className="text-3xl font-light uppercase tracking-wider">Տեղադրել հայտարարություն</h2>
             <div className="w-40 h-px bg-white/30"></div>
           </div>
+
           <p className="mb-10 text-gray-400">Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
+
           <div className="flex flex-wrap justify-center gap-4">
-            <input type="text" placeholder="Անուն Ազգանուն" className="bg-transparent border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 focus:border-orange-400 transition-colors outline-none" />
-            <input type="tel" placeholder="Հեռախոսահամար" className="bg-transparent border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none" />
-            <input type="email" placeholder="Էլ․ Հասցե" className="bg-transparent border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none" />
+            <input type="text" placeholder="Անուն Ազգանուն" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 focus:border-orange-400 outline-none text-white" />
+            <input type="tel" placeholder="Հեռախոսահամար" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none text-white" />
+            <input type="email" placeholder="Էլ․ Հասցե" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none text-white" />
             <button className="bg-orange-400 text-black px-10 py-3 rounded-2xl font-bold hover:bg-orange-500 transition-all">Ուղարկել</button>
           </div>
         </div>
