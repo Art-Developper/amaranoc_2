@@ -21,10 +21,14 @@ app.use(express.json());
 app.use(session({
     secret: "MarmokJohanOlegCoffiJanagaCristianoRonaldoMessiLeonel",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        maxAge: 24 * 60 * 60 * 1000
+    }
 }));
-app.use(passport.session());
 app.use(passport.initialize());
+app.use(passport.session());
 
 app.post("/api/register", async (req, res) => {
     try {
@@ -109,10 +113,42 @@ app.get("/api/profile", (req, res) => {
     if (req.isAuthenticated()) {
         return res.json({
             name: req.user.name,
-            email: req.user.email
+            email: req.user.email,
+            phoneNumber: req.user.phoneNumber
         });
     }
     res.status(401).json({ message: "Not authenticated" });
+});
+
+app.put("/api/user/update", (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործած չեք" });
+
+    const { name, phoneNumber } = req.body;
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+
+    if (userIndex !== -1) {
+        users[userIndex].name = name;
+        users[userIndex].phoneNumber = phoneNumber;
+
+        req.user.name = name;
+        req.user.phoneNumber = phoneNumber;
+        return req.json({ success: true, user: users[userIndex] });
+    }
+    res.status(404).json({ message: "Օգտատերը չի գտնվել" });
+})
+
+app.delete("/api/user/delete", (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործած չեք" });
+
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+    if (userIndex !== -1) {
+        users.splice(userIndex, 1);
+        req.logOut(() => {
+            res.json({ success: true });
+        });
+    } else {
+        res.status(404).json({ message: "Սխալ" });
+    }
 });
 
 

@@ -94,9 +94,7 @@ export default function Sales() {
           <Globe className="w-5 h-5 cursor-pointer" />
           {loading ? null : user ? (
             <div className="flex items-center gap-4">
-              <span className="text-sm font-semibold">
-                {user.name}
-              </span>
+              <Link href="/userPage" className="text-[14px] font-bold text-gray-900">{user.name}</Link>
               <button
                 onClick={handleLogout}
                 className="text-sm text-red-500 hover:underline"
@@ -193,37 +191,33 @@ export default function Sales() {
         </div>
       </div>
 
-      <div className="bg-black text-white flex justify-center w-auto ">
-        <div className=" border-1 rounded-2xl  mx-auto my-16  max-w-6xl w-full flex flex-wrap justify-center">
-          <div className="flex justify-center items-center gap-8 px-10 pt-20">
-            <div className="w-60 h-0.5 bg-white"></div>
-            <div><h1 className="text-3xl">ՏԵՂԱԴՐԵԼ ՀԱՅՏԱՐԱՐՈՒԹՅՈՒՆ</h1></div>
-            <div className="w-60 h-0.5 bg-white"></div>
+      <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
+
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/image/background/background.jpg"
+            alt="Background"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto border border-gray-700 rounded-3xl p-10 text-center">
+          <div className="flex justify-center items-center gap-8 mb-10">
+            <div className="w-40 h-px bg-white/30"></div>
+            <h2 className="text-3xl font-light uppercase tracking-wider">Տեղադրել հայտարարություն</h2>
+            <div className="w-40 h-px bg-white/30"></div>
           </div>
-          <div className="flex justify-center pt-6">
-            <p>Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
-          </div>
-          <div className="flex justify-center items-center gap-4 pt-6 pb-20">
-            <input
-              type="text"
-              placeholder="Անուն Ազգանուն"
-              className="border-1 rounded-2xl  px-10 py-2 w-full"
-            ></input>
-            <input
-              type="phone"
-              placeholder="Հեռախոահամար"
-              className="border-1 rounded-2xl  px-10 py-2 w-full"
-            >
-            </input>
-            <input
-              type="mail"
-              placeholder="Էլ․ Հասցե"
-              className="border-1 rounded-2xl  px-10 py-2 w-full"
-            >
-            </input>
-            <button
-              className="border-1 border-orange-400 rounded-3xl px-6 py-2 bg-orange-400"
-            >Ուղարկել</button>
+
+          <p className="mb-10 text-gray-400">Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
+
+          <div className="flex flex-wrap justify-center gap-4">
+            <input type="text" placeholder="Անուն Ազգանուն" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 focus:border-orange-400 outline-none text-white" />
+            <input type="tel" placeholder="Հեռախոսահամար" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none text-white" />
+            <input type="email" placeholder="Էլ․ Հասցե" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none text-white" />
+            <button className="bg-orange-400 text-black px-10 py-3 rounded-2xl font-bold hover:bg-orange-500 transition-all">Ուղարկել</button>
           </div>
         </div>
       </div>

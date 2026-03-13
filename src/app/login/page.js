@@ -26,7 +26,7 @@ export default function LoginPage() {
             if (data.success) {
                 alert(data.message);
                 localStorage.setItem("user", JSON.stringify(data.user)); 
-                router.push("/"); 
+                router.push("/userPage"); 
             } else {
                 alert(data.message);
             }
