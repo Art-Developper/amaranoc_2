@@ -7,18 +7,24 @@ import {
 } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
-import { usePathname } from "next/navigation";
+// --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Ավելացվել է useSearchParams ---
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import { fetchData } from "@/lib/api.js";
 
 export default function Home() {
   const pathName = usePathname();
+  const router = useRouter();
+  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: URL-ից պարամետրերը կարդալու համար ---
+  const searchParams = useSearchParams();
+
   const [houses, setHouses] = useState([]);
   const scrollRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: searchQuery-ն հիմա սկզբնավորվում է URL-ից եկած արժեքով ---
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
   const [selectedRegions, setSelectedRegions] = useState([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -29,17 +35,20 @@ export default function Home() {
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Երբ URL-ը փոխվում է (ուրիշ էջից որոնում), թարմացնում ենք state-ը ---
+  useEffect(() => {
+    setSearchQuery(searchParams.get('search') || "");
+  }, [searchParams]);
+
+  // Տվյալների ֆիլտրացված ստացում
   useEffect(() => {
     const params = new URLSearchParams();
-
     if (searchQuery) params.append('search', searchQuery);
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
     if (peopleCount > 1) params.append('people', peopleCount);
-
     selectedRegions.forEach(reg => params.append('region', reg));
 
     fetchData(`houses?${params.toString()}`).then(data => {
@@ -54,17 +63,31 @@ export default function Home() {
       .catch(() => { setUser(null); setLoading(false); });
   }, []);
 
+  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Enter սեղմելու ֆունկցիան ---
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Enter") {
+      // Եթե գլխավոր էջում չենք, տանում է գլխավոր էջ
+      if (pathName !== "/") {
+        router.push(`/?search=${searchQuery}`);
+      } else {
+        // Եթե արդեն գլխավորում ենք, ուղղակի թարմացնում է URL-ը առանց էջը թարմացնելու
+        const params = new URLSearchParams(searchParams);
+        params.set('search', searchQuery);
+        router.push(`?${params.toString()}`, { scroll: false });
+      }
+    }
+  };
+
   const handleRegionChange = (regionName) => {
     setSelectedRegions(prev =>
-      prev.includes(regionName)
-        ? prev.filter(r => r !== regionName)
-        : [...prev, regionName]
+      prev.includes(regionName) ? prev.filter(r => r !== regionName) : [...prev, regionName]
     );
   };
 
   const handleLogout = async () => {
     await fetch("http://localhost:5000/api/logout", { method: "POST", credentials: "include" });
     setUser(null);
+    window.location.reload();
   };
 
   const checkScroll = () => {
@@ -91,10 +114,7 @@ export default function Home() {
   const scroll = (direction) => {
     if (scrollRef.current) {
       const scrollAmount = 300;
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+      scrollRef.current.scrollBy({ left: direction === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
     }
   };
 
@@ -119,43 +139,25 @@ export default function Home() {
     { id: 14, label: "Բնակարաններ", icon: Building2 },
   ];
 
-  const monthNames = [
-    "ՀՈՒՆՎԱՐ", "ՓԵՏՐՎԱՐ", "ՄԱՐՏ", "ԱՊՐԻԼ", "ՄԱՅԻՍ", "ՀՈՒՆԻՍ",
-    "ՀՈՒԼԻՍ", "ՕԳՈՍՏՈՍ", "ՍԵՊՏԵՄԲԵՐ", "ՀՈԿՏԵՄԲԵՐ", "ՆՈՅԵՄԲԵՐ", "ԴԵԿՏԵՄԲԵՐ"
-  ];
+  const monthNames = ["ՀՈՒՆՎԱՐ", "ՓԵՏՐՎԱՐ", "ՄԱՐՏ", "ԱՊՐԻԼ", "ՄԱՅԻՍ", "ՀՈՒՆԻՍ", "ՀՈՒԼԻՍ", "ՕԳՈՍՏՈՍ", "ՍԵՊՏԵՄԲԵՐ", "ՀՈԿՏԵՄԲԵՐ", "ՆՈՅԵՄԲԵՐ", "ԴԵԿՏԵՄԲԵՐ"];
   const nextMonth = () => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)));
   const prevMonth = () => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)));
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
-
   const firstDayOfMonth = (new Date(year, month, 1).getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
-
   const calendarDays = [];
-
-  for (let i = firstDayOfMonth - 1; i >= 0; i--) {
-    calendarDays.push({ day: daysInPrevMonth - i, currentMonth: false });
-  }
-
-  for (let i = 1; i <= daysInMonth; i++) {
-    calendarDays.push({ day: i, currentMonth: true });
-  }
-
+  for (let i = firstDayOfMonth - 1; i >= 0; i--) calendarDays.push({ day: daysInPrevMonth - i, currentMonth: false });
+  for (let i = 1; i <= daysInMonth; i++) calendarDays.push({ day: i, currentMonth: true });
   const remainingSlots = 42 - calendarDays.length;
-  for (let i = 1; i <= remainingSlots; i++) {
-    calendarDays.push({ day: i, currentMonth: false });
-  }
+  for (let i = 1; i <= remainingSlots; i++) calendarDays.push({ day: i, currentMonth: false });
 
   return (
     <div className="min-h-screen bg-white">
       <header className="relative bg-white border-b border-gray-100 z-[60]">
         <div className="flex justify-between items-center max-w-[1440px] mx-auto py-7 px-4">
-
-          <Link href="/">
-            <img src="/logo.svg" alt="Logo" width="170" />
-          </Link>
-
+          <Link href="/"><img src="/logo.svg" alt="Logo" width="170" /></Link>
           <nav className="hidden min-[1321px]:flex items-center gap-10 font-medium text-sm text-gray-700">
             <Link className={linkClass("/")} href="/">Գլխավոր</Link>
             <Link className={linkClass("/sales")} href="/sales">Զեղչեր</Link>
@@ -165,111 +167,63 @@ export default function Home() {
 
           <div className="flex gap-5 items-center">
             <Globe className="w-5 h-5 cursor-pointer text-gray-700 hover:text-orange-500 transition" />
-
             <div className="hidden min-[1321px]:flex items-center">
               {loading ? null : user ? (
                 <div className="flex items-center gap-4">
-                  <Link href="/userPage" className="text-[14px] font-bold text-gray-900">{user.name}</Link>
-                  <button
-                    onClick={handleLogout}
-                    className="text-sm text-red-500 hover:underline font-medium"
-                  >
-                    Դուրս գալ
-                  </button>
+                  <Link href="/userPage" className="text-[14px] font-bold text-orange-500 border-b border-orange-500">{user.name}</Link>
+                  <button onClick={handleLogout} className="text-sm text-red-500 hover:underline font-medium">Դուրս գալ</button>
                 </div>
               ) : (
-                <Link className={linkClass("/login")} href="/login">
-                  <User className="w-5 h-5 cursor-pointer" />
-                </Link>
+                <Link className={linkClass("/login")} href="/login"><User className="w-5 h-5 cursor-pointer" /></Link>
               )}
             </div>
 
             <div className="relative hidden sm:block">
+              {/* --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Ավելացվել է onKeyDown --- */}
               <input
                 type="text"
                 placeholder="Որոնում"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-48 lg:w-64 focus:outline-none focus:border-orange-400 transition"
               />
               <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
 
-            <button
-              className="min-[1321px]:hidden p-2 text-gray-700 hover:text-orange-500 transition-all"
-              onClick={() => setIsMenuOpen(true)}
-            >
+            <button className="min-[1321px]:hidden p-2 text-gray-700 hover:text-orange-500 transition-all" onClick={() => setIsMenuOpen(true)}>
               <Menu size={30} />
             </button>
           </div>
         </div>
 
-        <div
-          className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-            }`}
-          onClick={() => setIsMenuOpen(false)}
-        />
-
-        <div
-          className={`fixed top-0 right-0 h-full w-[350px] sm:w-[450px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ease-in-out ${isMenuOpen ? "translate-x-0" : "translate-x-full"
-            }`}
-        >
-          <button
-            className="absolute top-8 right-8 w-11 h-11 border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all"
-            onClick={() => setIsMenuOpen(false)}
-          >
+        <div className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} onClick={() => setIsMenuOpen(false)} />
+        <div className={`fixed top-0 right-0 h-full w-[350px] sm:w-[450px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ease-in-out ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <button className="absolute top-8 right-8 w-11 h-11 border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all" onClick={() => setIsMenuOpen(false)}>
             <X size={24} />
           </button>
-
           <nav className="flex flex-col gap-10 mt-24">
-            <Link
-              href="/"
-              className="text-[20px] font-bold text-gray-900 relative w-fit after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-12 after:h-1 after:bg-orange-400"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Գլխավոր
-            </Link>
-
-            <Link href="/sales" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>
-              Զեղչեր
-            </Link>
-            <Link href="/service" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>
-              Ծառայություններ
-            </Link>
-            <Link href="/about_us" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>
-              Մեր մասին
-            </Link>
-
+            <Link href="/" className="text-[20px] font-bold text-gray-900 relative w-fit after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-12 after:h-1 after:bg-orange-400" onClick={() => setIsMenuOpen(false)}>Գլխավոր</Link>
+            <Link href="/sales" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Զեղչեր</Link>
+            <Link href="/service" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Ծառայություններ</Link>
+            <Link href="/about_us" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Մեր մասին</Link>
             <hr className="border-gray-100 my-2" />
-
             {loading ? null : user ? (
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col">
                   <span className="text-gray-400 text-sm uppercase tracking-widest">Օգտատեր</span>
-                  <Link href="/userPage" className="text-[20px] font-bold text-gray-900">{user.name}</Link>
+                  <Link href="/userPage" className="text-[20px] font-bold text-gray-900" onClick={() => setIsMenuOpen(false)}>{user.name}</Link>
                 </div>
-                <button
-                  onClick={() => { handleLogout(); setIsMenuOpen(false); }}
-                  className="text-[20px] font-bold text-red-500 text-left hover:text-red-600 transition-colors"
-                >
-                  Դուրս գալ
-                </button>
+                <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="text-[20px] font-bold text-red-500 text-left hover:text-red-600 transition-colors">Դուրս գալ</button>
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Մուտք
-              </Link>
+              <Link href="/login" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Մուտք</Link>
             )}
           </nav>
         </div>
       </header>
 
       <div className="max-w-[1440px] mx-auto px-4 flex gap-10 mt-6">
-
         <aside className="w-[320px] flex-shrink-0 flex flex-col gap-8 border border-gray-100 rounded-[35px] p-8 h-fit sticky top-5 shadow-sm overflow-y-auto max-h-[90vh] no-scrollbar">
           <section>
             <h3 className="font-bold text-lg mb-4">Տարածաշրջան</h3>
@@ -393,85 +347,48 @@ export default function Home() {
         </aside>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-
           <div className="flex gap-4 mb-6">
-            <button
-              onClick={() => setIsCalendarOpen(true)}
-              className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm bg-white text-sm font-semibold">
-              <Calendar size={18} /> Օրացույց
+            <button onClick={() => setIsCalendarOpen(true)} className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm bg-white text-sm font-semibold">
+              Օրացույց <Calendar size={18} />
             </button>
           </div>
 
           {isCalendarOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-              <div className="bg-white rounded-[20px] w-full max-w-[480px] shadow-2xl overflow-hidden border border-gray-100">
-
+              <div className="bg-white rounded-[20px] w-full max-w-[480px] shadow-2xl overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
                   <h3 className="text-[18px] font-bold text-[#111827]">Նշեք Ձեր ցանկալի օրերը</h3>
-                  <button onClick={() => setIsCalendarOpen(false)} className="text-gray-400 hover:text-black transition-colors">
-                    <X size={22} />
-                  </button>
+                  <button onClick={() => setIsCalendarOpen(false)} className="text-gray-400 hover:text-black transition-colors"><X size={22} /></button>
                 </div>
-
                 <div className="bg-[#ff9d43] text-white flex justify-between items-center px-6 py-3">
-                  <button onClick={prevMonth} className="p-1 hover:bg-white/20 rounded-full transition-all">
-                    <ChevronLeft size={24} />
-                  </button>
-                  <span className="text-[18px] font-bold tracking-widest uppercase">
-                    {monthNames[month]} {year}
-                  </span>
-                  <button onClick={nextMonth} className="p-1 hover:bg-white/20 rounded-full transition-all">
-                    <ChevronRight size={24} />
-                  </button>
+                  <button onClick={prevMonth} className="p-1 hover:bg-white/20 rounded-full transition-all"><ChevronLeft size={24} /></button>
+                  <span className="text-[18px] font-bold tracking-widest uppercase">{monthNames[month]} {year}</span>
+                  <button onClick={nextMonth} className="p-1 hover:bg-white/20 rounded-full transition-all"><ChevronRight size={24} /></button>
                 </div>
-
                 <div className="grid grid-cols-7 text-center py-4 border-b border-gray-100 bg-gray-50/50">
                   {['երկ', 'երք', 'չոր', 'հնգ', 'ուրբ', 'շաբ', 'կիր'].map((day, i) => (
-                    <span key={day} className={`text-[13px] font-bold uppercase ${i >= 5 ? 'text-[#ff9d43]' : 'text-gray-400'}`}>
-                      {day}
-                    </span>
+                    <span key={day} className={`text-[13px] font-bold uppercase ${i >= 5 ? 'text-[#ff9d43]' : 'text-gray-400'}`}>{day}</span>
                   ))}
                 </div>
-
                 <div className="grid grid-cols-7 gap-y-2 px-4 py-6 text-center">
                   {calendarDays.map((item, index) => (
-                    <div
-                      key={index}
-                      className={`
-              h-10 flex items-center justify-center text-[15px] font-bold rounded-lg transition-all
-              ${item.currentMonth
-                          ? 'text-[#111827] cursor-pointer hover:bg-orange-100 hover:text-orange-500'
-                          : 'text-gray-200'}
-            `}
-                    >
+                    <div key={index} className={`h-10 flex items-center justify-center text-[15px] font-bold rounded-lg transition-all ${item.currentMonth ? 'text-[#111827] cursor-pointer hover:bg-orange-100 hover:text-orange-500' : 'text-gray-200'}`}>
                       {item.day}
                     </div>
                   ))}
                 </div>
-
                 <div className="flex justify-end gap-4 p-6 pt-0 border-t border-gray-50 mt-2">
-                  <button
-                    onClick={() => setIsCalendarOpen(false)}
-                    className="px-8 py-2 text-[15px] font-bold text-gray-900 hover:bg-gray-100 rounded-full transition-all"
-                  >
-                    Փակել
-                  </button>
-                  <button
-                    className="px-10 py-3 bg-[#f1f2f4] text-gray-400 text-[15px] font-bold rounded-[20px] transition-all"
-                  >
-                    Հաստատել
-                  </button>
+                  <button onClick={() => setIsCalendarOpen(false)} className="px-8 py-2 text-[15px] font-bold text-gray-900 hover:bg-gray-100 rounded-full transition-all">Փակել</button>
+                  <button className="px-10 py-3 bg-[#f1f2f4] text-gray-400 text-[15px] font-bold rounded-[20px] transition-all">Հաստատել</button>
                 </div>
-
               </div>
             </div>
           )}
 
+          {/* Categories Slider */}
           <div className="relative border-t border-gray-100 pt-8 mb-10 group">
             {showLeft && (
-              <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all">
-                <ChevronLeft size={18} />
-              </button>
+              <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all"><ChevronLeft size={18} /></button>
             )}
             <div ref={scrollRef} onScroll={checkScroll} className="flex items-center gap-12 overflow-x-auto no-scrollbar scroll-smooth">
               {categories.map((cat) => (
@@ -482,12 +399,11 @@ export default function Home() {
               ))}
             </div>
             {showRight && (
-              <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all">
-                <ChevronRight size={18} />
-              </button>
+              <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all"><ChevronRight size={18} /></button>
             )}
           </div>
 
+          {/* Houses Grid */}
           <main>
             <h2 className="text-[22px] font-bold text-gray-800 mb-8 tracking-tight">Լավագույն առաջարկներ</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -495,9 +411,7 @@ export default function Home() {
                 <div key={house.id} className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card">
                   <div className="relative h-64 w-full overflow-hidden">
                     <img src={house.image} alt={house.location} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
-                    <div className="absolute bottom-5 right-5 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all">
-                      <Heart size={20} className="text-gray-800" />
-                    </div>
+                    <div className="absolute bottom-5 right-5 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all"><Heart size={20} className="text-gray-800" /></div>
                   </div>
                   <div className="p-6 flex flex-col gap-5">
                     <div className="flex justify-between items-center">
@@ -505,71 +419,60 @@ export default function Home() {
                         <div className="flex items-center gap-2 font-bold text-[15px] text-gray-800"><MapPin size={17} className="text-orange-400" /> {house.location}</div>
                         <div className="flex items-center gap-2 text-[15px] font-bold text-gray-500"><User size={17} className="text-orange-400" /> {house.people}</div>
                       </div>
-                      {house.rating !== "0" && (
-                        <div className="bg-orange-400 text-white px-2.5 py-1 rounded-xl text-[13px] font-bold flex items-center gap-1">★ {house.rating}</div>
-                      )}
+                      {house.rating !== "0" && <div className="bg-orange-400 text-white px-2.5 py-1 rounded-xl text-[13px] font-bold flex items-center gap-1">★ {house.rating}</div>}
                     </div>
                     <div className="flex items-center gap-2 text-[22px] font-black text-[#343a4a]">
-                      <Tag size={22} className="text-orange-400" /> {house.price} <span className="font-normal text-xl ml-1"></span>
+                      <Tag size={22} className="text-orange-400" /> {house.price}
                     </div>
                   </div>
                 </div>
               )) : (
-                <div className="col-span-full text-center py-20 text-gray-400 italic">Ոչինչ չի գտնվել</div>
+                <div className="col-span-full text-center py-20 text-gray-400 italic">Ոչինչ չի գտնվել "{searchQuery}" հարցումով</div>
               )}
             </div>
           </main>
         </div>
       </div>
 
+      {/* Hero-like Ad section with background image */}
       <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
-
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/image/background/background.jpg"
-            alt="Background"
-            fill
-            className="object-cover"
-            priority
-          />
+          <Image src="/image/background/background.jpg" alt="Background" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-black/60"></div>
         </div>
-
-        <div className="relative z-10 max-w-6xl mx-auto border border-gray-700 rounded-3xl p-10 text-center">
+        <div className="relative z-10 max-w-6xl mx-auto border border-gray-700 rounded-3xl p-10 text-center backdrop-blur-sm">
           <div className="flex justify-center items-center gap-8 mb-10">
-            <div className="w-40 h-px bg-white/30"></div>
-            <h2 className="text-3xl font-light uppercase tracking-wider">Տեղադրել հայտարարություն</h2>
-            <div className="w-40 h-px bg-white/30"></div>
+            <div className="w-10 md:w-40 h-px bg-white/30"></div>
+            <h2 className="text-2xl md:text-3xl font-light uppercase tracking-wider">Տեղադրել հայտարարություն</h2>
+            <div className="w-10 md:w-40 h-px bg-white/30"></div>
           </div>
-
-          <p className="mb-10 text-gray-400">Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
-
+          <p className="mb-10 text-gray-300">Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
           <div className="flex flex-wrap justify-center gap-4">
-            <input type="text" placeholder="Անուն Ազգանուն" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 focus:border-orange-400 outline-none text-white" />
-            <input type="tel" placeholder="Հեռախոսահամար" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none text-white" />
-            <input type="email" placeholder="Էլ․ Հասցե" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none text-white" />
+            <input type="text" placeholder="Անուն Ազգանուն" className="bg-white/10 border border-gray-500 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
+            <input type="tel" placeholder="Հեռախոսահամար" className="bg-white/10 border border-gray-500 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
+            <input type="email" placeholder="Էլ․ Հասցե" className="bg-white/10 border border-gray-500 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
             <button className="bg-orange-400 text-black px-10 py-3 rounded-2xl font-bold hover:bg-orange-500 transition-all">Ուղարկել</button>
           </div>
         </div>
       </div>
 
-      <div className="bg-[#101623] text-white pt-10">
-        <h2 className="text-center text-3xl mb-10">ԿՈՆՏԱԿՏՆԵՐ</h2>
+      <footer className="bg-[#101623] text-white pt-10">
+        <h2 className="text-center text-3xl mb-10 tracking-widest font-light uppercase">Կոնտակտներ</h2>
         <div className="flex flex-wrap justify-center gap-10 px-4 mb-10">
-          <div className="flex items-center gap-2"><Phone size={20} /> <span className="text-sm">041-611-611 / 044-611-611</span></div>
-          <div className="flex items-center gap-2 uppercase"><Mail size={20} /> <span className="text-sm tracking-wider">amaranoc.info@gmail.com</span></div>
-          <div className="flex items-center gap-2 uppercase"><Instagram size={20} /> <span className="text-sm tracking-wider">amaranoc.am</span></div>
-          <div className="flex items-center gap-2 uppercase"><Facebook size={20} /> <span className="text-sm tracking-wider">amaranoc.am</span></div>
-          <div className="flex items-center gap-2 uppercase"><MapPin size={20} /> <span className="text-sm tracking-wider">Թումանյան 5</span></div>
+          <div className="flex items-center gap-2"><Phone size={20} className="text-orange-500" /> <span className="text-sm">041-611-611 / 044-611-611</span></div>
+          <div className="flex items-center gap-2 uppercase tracking-wide"><Mail size={20} className="text-orange-500" /> <span className="text-sm">amaranoc.info@gmail.com</span></div>
+          <div className="flex items-center gap-2 uppercase tracking-wide"><Instagram size={20} className="text-orange-500" /> <span className="text-sm font-medium">AMARANOC.AM</span></div>
+          <div className="flex items-center gap-2 uppercase tracking-wide"><Facebook size={20} className="text-orange-500" /> <span className="text-sm font-medium">AMARANOC.AM</span></div>
+          <div className="flex items-center gap-2 uppercase tracking-wide"><MapPin size={20} className="text-orange-500" /> <span className="text-sm">Թումանյան 5</span></div>
         </div>
         <div className="text-center text-gray-500 text-xs pb-10 space-y-2">
-          <p className="underline cursor-pointer">Գաղտնիության քաղաքականություն</p>
+          <p className="underline cursor-pointer hover:text-orange-500 transition">Գաղտնիության քաղաքականություն</p>
           <p>Ամառանոց ՍՊԸ | Amaranoc LLC | Амараноц OOO</p>
         </div>
         <div className="w-full relative h-40">
           <Image src="/image/footer-background.webp" alt="footer" fill className="object-cover opacity-40" />
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

@@ -132,7 +132,7 @@ app.put("/api/user/update", (req, res) => {
 
         req.user.name = name;
         req.user.phoneNumber = phoneNumber;
-        return req.json({ success: true, user: users[userIndex] });
+        return res.json({ success: true, user: users[userIndex] });
     }
     res.status(404).json({ message: "Օգտատերը չի գտնվել" });
 })
