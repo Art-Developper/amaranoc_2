@@ -434,7 +434,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Hero-like Ad section with background image */}
       <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
         <div className="absolute inset-0 z-0">
           <Image src="/image/background/background.jpg" alt="Background" fill className="object-cover" priority />

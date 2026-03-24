@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { User, Globe, Search } from "lucide-react";
+import { User, Globe } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -25,8 +25,8 @@ export default function LoginPage() {
 
             if (data.success) {
                 alert(data.message);
-                localStorage.setItem("user", JSON.stringify(data.user)); 
-                router.push("/userPage"); 
+                localStorage.setItem("user", JSON.stringify(data.user));
+                router.push("/userPage");
             } else {
                 alert(data.message);
             }
@@ -55,10 +55,6 @@ export default function LoginPage() {
                     <div className="flex gap-5 items-center">
                         <button className="text-gray-700 hover:text-orange-500 transition"><Globe className="w-5 h-5" /></button>
                         <Link href="/login" className="text-orange-500"><User className="w-5 h-5" /></Link>
-                        <div className="relative">
-                            <input type="text" placeholder="Որոնում" className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-64 focus:outline-none" />
-                            <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                        </div>
                     </div>
                 </div>
             </header>
