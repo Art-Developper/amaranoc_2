@@ -49,16 +49,232 @@ export const salesHouses = [
 ];
 
 export const houses = [
-    { id: 1, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1759149473223--0.33907271602966693image.webp&w=1920&q=75", location: "Գառնի", price: "45,000 ֏", people: "6", rating: "5" },
-    { id: 2, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1768642248614--0.5149213932422279image.webp&w=1920&q=75", location: "Դիլիջան", price: "35,000 ֏", people: "4", rating: "0" },
-    { id: 3, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1758095203425--0.034694092059661896image.webp&w=1920&q=75", location: "Ծաղկաձոր", price: "250,000 ֏", people: "12", rating: "4.9" },
-    { id: 4, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1759149473223--0.33907271602966693image.webp&w=1920&q=75", location: "Բջնի", price: "40,000 ֏", people: "4-6", rating: "4.8" },
-    { id: 5, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1753697519352--0.8706588573375771image.webp&w=1920&q=75", location: "Օհանավան", price: "75,000 ֏", people: "2-4", rating: "5.0" },
-    { id: 6, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1766738569225--0.12206903448369033image.webp&w=1920&q=75", location: "Սևան", price: "150,000 ֏", people: "40", rating: "4" },
-    { id: 7, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1762686772282--0.7753343924665224image.webp&w=1920&q=75", location: "Օհանավան", price: "80,000 ֏", people: "25", rating: "5" },
-    { id: 8, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1763196873802--0.32875657677659165image.webp&w=1920&q=75", location: "Ծաղկաձոր", price: "100,000 ֏", people: "20", rating: "4.5" },
-    { id: 9, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1769175140647--0.2972160378325819image.webp&w=1920&q=75", location: "Դիլիջան", price: "60,000 ֏", people: "12", rating: "0" },
-    { id: 10, image: "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1768485493875--0.11421439312574466image.webp&w=1920&q=75", location: "Բազմաղբյուր", price: "80,000 ֏", people: "25", rating: "0" },
+    {
+        id: 1,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1771505525849--0.8067235592724957image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1771505525906--0.4427279375431248image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1771505526087--0.9825452884464889image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1771505526186--0.2849535654176689image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1771505526253--0.8001521228220294image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1771505526289--0.2416034610897111image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1771505526404--0.9728030640018648image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1771505526437--0.4496661268342401image_optimized.webp&w=1920&q=75"
+        ],
+        code: "AT267",
+        location: "Գառնի",
+        overnight: true,
+        buildingSurface: 60,
+        totalArea: 230,
+        price: {
+            weekday: 50000,
+            weekend: 60000,
+            currency: "֏"
+        },
+        people: 6,
+        sleeps: 6,
+        checkIn: "12:00",
+        checkOut: "11:00",
+        roomsCount: 2,
+        bathroomsCount: 1,
+        swimmingPoll: null,
+
+        amenities: [
+            "Պրոյեկտոր",
+            "Մանղալ, շամփուր",
+            "Անվճար ձկնորսություն (մինչև 5կգ)",
+            "Սպասք",
+            "Wi-Fi",
+            "Նվագարկիչ",
+            "Օդորակիչ",
+            "Անկողնային պարագաներ",
+            "Հիգենայի պարագաներ",
+            "Սրբիչներ"
+        ],
+        
+        rating: 5,
+        description: `Վերջ,էլ մտածելու ժամանակ չկա:Մինչև դուք մտածում եք ամրագրեք,թե չէ՝մյուսները ձեզ հերթ չեն տալիս: Տնակը գտնվում է Գառնիում, նախատեսված է ընտանեկան հավաքույթների համար։Տնակը նախատեսված է 6 անձի համար։Տնակում առկա է՝`
+    },
+    {
+        id: 2,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1768642248614--0.5149213932422279image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248649--0.011700151357041388image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248700--0.0213570886081913image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248724--0.5837322068976958image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248759--0.9681517368886985image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248850--0.08358150339718451image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248878--0.26153989149568857image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248922--0.9604349539601535image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Դիլիջան",
+        overnight: true,
+        buildingSurface: 60,
+        totalArea: 230,
+        price: 35.000,
+        people: 4,
+        rating: 0
+    },
+    {
+        id: 3,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766138959706--0.3054419188731099image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768640685536--0.9480700289872914image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766138959642--0.34600375792010074image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768640685590--0.2445069726814988image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768640685717--0.5021940662617344image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768640685657--0.9907675498169568image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768640685657--0.9907675498169568image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768640685642--0.4494977421302724image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Ծաղկաձոր",
+        overnight: true,
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "110,000 ֏",
+        people: "12",
+        rating: "4.9"
+    },
+    {
+        id: 4,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1759149473223--0.33907271602966693image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1759149473270--0.9332510542564927image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1759149222972--0.7730499911530357image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1759149473303--0.6889952459702082image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1759149473377--0.8266577185559987image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1759149473832--0.5625524911125754image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1759149473780--0.7161349132074479image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1759149474346--0.5645417679891576image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Բջնի",
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "40,000 ֏",
+        people: "20",
+        overnight: true,
+        rating: "4.8"
+    },
+    {
+        id: 5,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857633--0.9170065204613804image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857635--0.22340383112106754image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857639--0.6571081261069702image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857641--0.03477079883708156image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857645--0.5424957472129248image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857737--0.8048581893349336image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857753--0.6111322679385123image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1721211857750--0.5810874451562624image.webp&w=1920&q=75"
+        ],
+        location: "Օհանավան",
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "75,000 ֏",
+        people: "2-4",
+        overnight: false,
+        rating: "5.0"
+    },
+    {
+        id: 6,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569225--0.12206903448369033image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569224--0.3226867704580172image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569251--0.28147530819582256image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569257--0.7991994152131399image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569269--0.13880497292309535image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569287--0.03743444202461177image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569301--0.03152207403414131image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1766738569269--0.13880497292309535image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Սևան",
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "150,000 ֏",
+        people: "40",
+        overnight: true,
+        rating: "4"
+    },
+    {
+        id: 7,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1772101270175--0.33528012693145826image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1772101138268--0.6979454403246297image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1732616461618--0.6754259219249439image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1772095879747--0.40546920824418886image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1772095879801--0.5698659083071305image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1772095879899--0.2160054074714426image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1732616461348--0.22713065935419308image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1732616461348--0.22713065935419308image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Ձորաղբյուր",
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "130,000 ֏",
+        people: "25",
+        overnight: true,
+        rating: "5"
+    },
+    {
+        id: 8,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1764500077731--0.12333157753130175image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1760974110929--0.6901790507822674image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1760974111178--0.6190225560999072image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1760974111056--0.7426821811754736image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1760974111264--0.9183758251648859image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1760974111514--0.7423787949740068image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1760974111697--0.4928706839041095image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1760974111416--0.2294250727046412image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Ծաղկաձոր",
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "90,000 ֏",
+        people: "20",
+        overnight: true,
+        rating: "4.5"
+    },
+    {
+        id: 9,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346874--0.8195818291938592image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346876--0.9606723038270111image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346878--0.10067942644071692image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346880--0.5645120724422281image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346884--0.10679478294945799image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346884--0.10679478294945799image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346892--0.5544866455661488image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1767083346891--0.6346356852820216image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Դիլիջան",
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "75,000 ֏",
+        people: "12",
+        overnight: true,
+        rating: "0"
+    },
+    {
+        id: 10,
+        image: [
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2Fcompressed_images%2Fcompressed_1768485493875--0.11421439312574466image.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768485493880--0.774628404062925image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768485493877--0.3676810510775108image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768485493874--0.0019088712894284043image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768485493851--0.8804989146682192image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768485493871--0.11436341684212259image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768485493868--0.2576305537593402image_optimized.webp&w=1920&q=75",
+            "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768485493879--0.6227772750219758image_optimized.webp&w=1920&q=75"
+        ],
+        location: "Բազմաղբյուր",
+        buildingSurface: "60 քմ",
+        totalArea: "230 քմ",
+        price: "80,000 ֏",
+        people: "25",
+        overnight: true,
+        rating: "0"
+    },
 ];
 
 export const servicesData = {

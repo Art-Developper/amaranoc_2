@@ -7,15 +7,17 @@ import {
 } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
-// --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Ավելացվել է useSearchParams ---
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, useEffect } from "react";
 import { fetchData } from "@/lib/api.js";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 export default function Home() {
   const pathName = usePathname();
   const router = useRouter();
-  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: URL-ից պարամետրերը կարդալու համար ---
   const searchParams = useSearchParams();
 
   const [houses, setHouses] = useState([]);
@@ -23,7 +25,6 @@ export default function Home() {
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
 
-  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: searchQuery-ն հիմա սկզբնավորվում է URL-ից եկած արժեքով ---
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
   const [selectedRegions, setSelectedRegions] = useState([]);
   const [minPrice, setMinPrice] = useState("");
@@ -37,12 +38,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Երբ URL-ը փոխվում է (ուրիշ էջից որոնում), թարմացնում ենք state-ը ---
   useEffect(() => {
     setSearchQuery(searchParams.get('search') || "");
   }, [searchParams]);
 
-  // Տվյալների ֆիլտրացված ստացում
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchQuery) params.append('search', searchQuery);
@@ -63,14 +62,11 @@ export default function Home() {
       .catch(() => { setUser(null); setLoading(false); });
   }, []);
 
-  // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Enter սեղմելու ֆունկցիան ---
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter") {
-      // Եթե գլխավոր էջում չենք, տանում է գլխավոր էջ
       if (pathName !== "/") {
         router.push(`/?search=${searchQuery}`);
       } else {
-        // Եթե արդեն գլխավորում ենք, ուղղակի թարմացնում է URL-ը առանց էջը թարմացնելու
         const params = new URLSearchParams(searchParams);
         params.set('search', searchQuery);
         router.push(`?${params.toString()}`, { scroll: false });
@@ -179,7 +175,6 @@ export default function Home() {
             </div>
 
             <div className="relative hidden sm:block">
-              {/* --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Ավելացվել է onKeyDown --- */}
               <input
                 type="text"
                 placeholder="Որոնում"
@@ -224,7 +219,7 @@ export default function Home() {
       </header>
 
       <div className="max-w-[1440px] mx-auto px-4 flex gap-10 mt-6">
-        <aside className="w-[320px] flex-shrink-0 flex flex-col gap-8 border border-gray-100 rounded-[35px] p-8 h-fit sticky top-5 shadow-sm overflow-y-auto max-h-[90vh] no-scrollbar">
+        <aside className="w-[320px] flex-shrink-0 flex flex-col gap-4 border border-gray-100 rounded-[35px] p-6 h-[calc(100vh-40px)] sticky top-5 shadow-sm overflow-y-auto no-scrollbar bg-white">
           <section>
             <h3 className="font-bold text-lg mb-4">Տարածաշրջան</h3>
             <div className="flex flex-col gap-4 max-h-[220px] overflow-y-auto no-scrollbar pr-2">
@@ -300,12 +295,11 @@ export default function Home() {
             <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Մարդկանց թույլատրելի քանակը գիշերակացով</h3>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setPeopleCount(prev => Math.max(1, prev - 1))}
+
                 className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
               ><Minus size={18} /></button>
-              <input type="text" value={peopleCount} className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" readOnly />
+              <input type="text" className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" />
               <button
-                onClick={() => setPeopleCount(prev => prev + 1)}
                 className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
               ><Plus size={18} /></button>
             </div>
@@ -385,7 +379,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Categories Slider */}
           <div className="relative border-t border-gray-100 pt-8 mb-10 group">
             {showLeft && (
               <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all"><ChevronLeft size={18} /></button>
@@ -403,31 +396,76 @@ export default function Home() {
             )}
           </div>
 
-          {/* Houses Grid */}
           <main>
             <h2 className="text-[22px] font-bold text-gray-800 mb-8 tracking-tight">Լավագույն առաջարկներ</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {houses.length > 0 ? houses.map((house) => (
-                <div key={house.id} className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card">
-                  <div className="relative h-64 w-full overflow-hidden">
-                    <img src={house.image} alt={house.location} className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500" />
-                    <div className="absolute bottom-5 right-5 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all"><Heart size={20} className="text-gray-800" /></div>
-                  </div>
-                  <div className="p-6 flex flex-col gap-5">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2 font-bold text-[15px] text-gray-800"><MapPin size={17} className="text-orange-400" /> {house.location}</div>
-                        <div className="flex items-center gap-2 text-[15px] font-bold text-gray-500"><User size={17} className="text-orange-400" /> {house.people}</div>
+              {houses.length > 0 ? (
+                houses.map((house) => (
+                  <div
+                    key={house.id}
+                    className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card"
+                  >
+                    <div className="relative h-64 w-full overflow-hidden">
+                      <Swiper
+                        modules={[Autoplay, Pagination]}
+                        spaceBetween={0}
+                        slidesPerView={1}
+                        loop={true}
+                        autoplay={{
+                          delay: 3000,
+                          disableOnInteraction: false,
+                        }}
+                        pagination={{ clickable: true }}
+                        className="h-full w-full"
+                        onSwiper={(swiper) => swiper.autoplay.stop()}
+                        onMouseEnter={(e) => e.currentTarget.swiper.autoplay.start()}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.swiper.autoplay.stop();
+                          e.currentTarget.swiper.slideToLoop(0);
+                        }}
+                      >
+                        {(Array.isArray(house.image) ? house.image : [house.image, house.image, house.image]).map((img, index) => (
+                          <SwiperSlide key={index}>
+                            <img
+                              src={img}
+                              alt={house.location}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                            />
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+
+                      <div className="absolute bottom-5 right-5 z-20 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all">
+                        <Heart size={20} className="text-gray-800" />
                       </div>
-                      {house.rating !== "0" && <div className="bg-orange-400 text-white px-2.5 py-1 rounded-xl text-[13px] font-bold flex items-center gap-1">★ {house.rating}</div>}
                     </div>
-                    <div className="flex items-center gap-2 text-[22px] font-black text-[#343a4a]">
-                      <Tag size={22} className="text-orange-400" /> {house.price}
+
+                    <div className="p-6 flex flex-col gap-5">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-6">
+                          <div className="flex items-center gap-2 font-bold text-[15px] text-gray-800">
+                            <MapPin size={17} className="text-orange-400" /> {house.location}
+                          </div>
+                          <div className="flex items-center gap-2 text-[15px] font-bold text-gray-500">
+                            <User size={17} className="text-orange-400" /> {house.people}
+                          </div>
+                        </div>
+                        {house.rating !== "0" && (
+                          <div className="bg-orange-400 text-white px-2.5 py-1 rounded-xl text-[13px] font-bold flex items-center gap-1">
+                            ★ {house.rating}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-[22px] font-black text-[#343a4a]">
+                        <Tag size={22} className="text-orange-400" /> {house.price}
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-20 text-gray-400 italic">
+                  Ոչինչ չի գտնվել "{searchQuery}" հարցումով
                 </div>
-              )) : (
-                <div className="col-span-full text-center py-20 text-gray-400 italic">Ոչինչ չի գտնվել "{searchQuery}" հարցումով</div>
               )}
             </div>
           </main>
