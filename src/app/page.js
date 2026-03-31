@@ -405,61 +405,63 @@ export default function Home() {
                     key={house.id}
                     className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card"
                   >
-                    <div className="relative h-64 w-full overflow-hidden">
-                      <Swiper
-                        modules={[Autoplay, Pagination]}
-                        spaceBetween={0}
-                        slidesPerView={1}
-                        loop={true}
-                        autoplay={{
-                          delay: 3000,
-                          disableOnInteraction: false,
-                        }}
-                        pagination={{ clickable: true }}
-                        className="h-full w-full"
-                        onSwiper={(swiper) => swiper.autoplay.stop()}
-                        onMouseEnter={(e) => e.currentTarget.swiper.autoplay.start()}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.swiper.autoplay.stop();
-                          e.currentTarget.swiper.slideToLoop(0);
-                        }}
-                      >
-                        {(Array.isArray(house.image) ? house.image : [house.image, house.image, house.image]).map((img, index) => (
-                          <SwiperSlide key={index}>
-                            <img
-                              src={img}
-                              alt={house.location}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
-                            />
-                          </SwiperSlide>
-                        ))}
-                      </Swiper>
+                    <Link href={`/houses/${house.id}`}>
+                      <div className="relative h-64 w-full overflow-hidden">
+                        <Swiper
+                          modules={[Autoplay, Pagination]}
+                          spaceBetween={0}
+                          slidesPerView={1}
+                          loop={true}
+                          autoplay={{
+                            delay: 3000,
+                            disableOnInteraction: false,
+                          }}
+                          pagination={{ clickable: true }}
+                          className="h-full w-full"
+                          onSwiper={(swiper) => swiper.autoplay.stop()}
+                          onMouseEnter={(e) => e.currentTarget.swiper.autoplay.start()}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.swiper.autoplay.stop();
+                            e.currentTarget.swiper.slideToLoop(0);
+                          }}
+                        >
+                          {(Array.isArray(house.image) ? house.image : [house.image, house.image, house.image]).map((img, index) => (
+                            <SwiperSlide key={index}>
+                              <img
+                                src={img}
+                                alt={house.location}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                              />
+                            </SwiperSlide>
+                          ))}
+                        </Swiper>
 
-                      <div className="absolute bottom-5 right-5 z-20 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all">
-                        <Heart size={20} className="text-gray-800" />
-                      </div>
-                    </div>
-
-                    <div className="p-6 flex flex-col gap-5">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-6">
-                          <div className="flex items-center gap-2 font-bold text-[15px] text-gray-800">
-                            <MapPin size={17} className="text-orange-400" /> {house.location}
-                          </div>
-                          <div className="flex items-center gap-2 text-[15px] font-bold text-gray-500">
-                            <User size={17} className="text-orange-400" /> {house.people}
-                          </div>
+                        <div className="absolute bottom-5 right-5 z-20 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all">
+                          <Heart size={20} className="text-gray-800" />
                         </div>
-                        {house.rating !== "0" && (
-                          <div className="bg-orange-400 text-white px-2.5 py-1 rounded-xl text-[13px] font-bold flex items-center gap-1">
-                            ★ {house.rating}
+                      </div>
+
+                      <div className="p-6 flex flex-col gap-5">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-2 font-bold text-[15px] text-gray-800">
+                              <MapPin size={17} className="text-orange-400" /> {house.location}
+                            </div>
+                            <div className="flex items-center gap-2 text-[15px] font-bold text-gray-500">
+                              <User size={17} className="text-orange-400" /> {house.people}
+                            </div>
                           </div>
-                        )}
+                          {house.rating !== "0" && (
+                            <div className="bg-orange-400 text-white px-2.5 py-1 rounded-xl text-[13px] font-bold flex items-center gap-1">
+                              ★ {house.rating}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-[22px] font-black text-[#343a4a]">
+                          <Tag size={22} className="text-orange-400" /> {house.price}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-[22px] font-black text-[#343a4a]">
-                        <Tag size={22} className="text-orange-400" /> {house.price}
-                      </div>
-                    </div>
+                    </Link>
                   </div>
                 ))
               ) : (

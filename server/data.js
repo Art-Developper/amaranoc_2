@@ -66,18 +66,14 @@ export const houses = [
         overnight: true,
         buildingSurface: 60,
         totalArea: 230,
-        price: {
-            weekday: 50000,
-            weekend: 60000,
-            currency: "֏"
-        },
+        price: 50000,
         people: 6,
         sleeps: 6,
         checkIn: "12:00",
         checkOut: "11:00",
         roomsCount: 2,
         bathroomsCount: 1,
-        swimmingPoll: null,
+        swimmingPool: null,
 
         amenities: [
             "Պրոյեկտոր",
@@ -91,7 +87,7 @@ export const houses = [
             "Հիգենայի պարագաներ",
             "Սրբիչներ"
         ],
-        
+
         rating: 5,
         description: `Վերջ,էլ մտածելու ժամանակ չկա:Մինչև դուք մտածում եք ամրագրեք,թե չէ՝մյուսները ձեզ հերթ չեն տալիս: Տնակը գտնվում է Գառնիում, նախատեսված է ընտանեկան հավաքույթների համար։Տնակը նախատեսված է 6 անձի համար։Տնակում առկա է՝`
     },
@@ -107,13 +103,31 @@ export const houses = [
             "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248878--0.26153989149568857image_optimized.webp&w=1920&q=75",
             "https://amaranoc.am/_next/image?url=https%3A%2F%2Fapi.amaranoc.am%2F1768642248922--0.9604349539601535image_optimized.webp&w=1920&q=75"
         ],
+        code: "AT266",
         location: "Դիլիջան",
         overnight: true,
         buildingSurface: 60,
-        totalArea: 230,
-        price: 35.000,
+        totalArea: 200,
+        price: 35000,
+
+
         people: 4,
-        rating: 0
+        sleeps: 4,
+        checkIn: "14-00",
+        checkOut: "12-00",
+        roomsCount: 2,
+        bathroomsCount: 1,
+        swimmingPool: "no",
+
+        amenities: [
+            "Մանղալ",
+            "WiFi",
+            "Smart հեռուստացույց",
+            "ՍպասքԿայանատեղի"
+        ],
+
+        rating: 0,
+        description: `Դիլիջանում օրավարձով է տրվում նմանը չունեցող տնակ՝ գեղեցիկ տեսարանով։Տնակը նախատեսված է 2մեծ +2 երեխայի համար ։`
     },
     {
         id: 3,
@@ -131,7 +145,7 @@ export const houses = [
         overnight: true,
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "110,000 ֏",
+        price: 110000,
         people: "12",
         rating: "4.9"
     },
@@ -150,7 +164,7 @@ export const houses = [
         location: "Բջնի",
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "40,000 ֏",
+        price: 40000,
         people: "20",
         overnight: true,
         rating: "4.8"
@@ -170,7 +184,7 @@ export const houses = [
         location: "Օհանավան",
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "75,000 ֏",
+        price: 75000,
         people: "2-4",
         overnight: false,
         rating: "5.0"
@@ -190,7 +204,7 @@ export const houses = [
         location: "Սևան",
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "150,000 ֏",
+        price: 150000,
         people: "40",
         overnight: true,
         rating: "4"
@@ -210,7 +224,7 @@ export const houses = [
         location: "Ձորաղբյուր",
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "130,000 ֏",
+        price: 130000,
         people: "25",
         overnight: true,
         rating: "5"
@@ -230,7 +244,7 @@ export const houses = [
         location: "Ծաղկաձոր",
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "90,000 ֏",
+        price: 90000,
         people: "20",
         overnight: true,
         rating: "4.5"
@@ -250,7 +264,7 @@ export const houses = [
         location: "Դիլիջան",
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "75,000 ֏",
+        price: 75000,
         people: "12",
         overnight: true,
         rating: "0"
@@ -270,12 +284,13 @@ export const houses = [
         location: "Բազմաղբյուր",
         buildingSurface: "60 քմ",
         totalArea: "230 քմ",
-        price: "80,000 ֏",
+        price: 80000,
         people: "25",
         overnight: true,
         rating: "0"
     },
 ];
+
 
 export const servicesData = {
     "Սպասարկում": [

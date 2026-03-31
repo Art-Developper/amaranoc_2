@@ -151,7 +151,11 @@ app.delete("/api/user/delete", (req, res) => {
     }
 });
 
-
+app.get("/api/houses/:id",(req,res)=>{
+    const house = houses.find(h => h.id === parseInt(req.params.id));
+    if (!house) return res.status(404).json({message: "Տունը չի գտնվել"});
+    res.json(house)
+})
 
 app.get("/api/houses", (req, res) => {
     const { search, region, minPrice, maxPrice, people } = req.query;
