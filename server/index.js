@@ -13,11 +13,14 @@ const users = [];
 
 
 let app = express();
+
 app.use(cors({
     origin: "http://localhost:3000",
     credentials: true
 }));
+
 app.use(express.json());
+
 app.use(session({
     secret: "MarmokJohanOlegCoffiJanagaCristianoRonaldoMessiLeonel",
     resave: false,
@@ -27,53 +30,9 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.post("/api/register", async (req, res) => {
-    try {
-        const { name, phoneNumber, email, password } = req.body
-
-        const usrExists = users.find(u => u.email === email);
-
-        if (usrExists) {
-            return res.status(400).json({ success: false, message: "Այս էլ. հասցեն արդեն գրանցված է" });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newUsr = {
-            id: Date.now(),
-            name,
-            phoneNumber,
-            email,
-            password: hashedPassword
-        };
-
-        users.push(newUsr)
-
-        res.status(201).json({ success: true, message: "Գրանցումը հաջողվեց" })
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Սերվերի սխալ" })
-    }
-})
-
-app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-        if (err) return res.status(500).json({ success: false, message: "Սերվերի սխալ" });
-        if (!user) return res.status(401).json({ success: false, message: info.message });
-
-        req.logIn(user, (err) => {
-            if (err) return res.status(500).json({ success: false, message: "Մուքտի սխալ" });
-
-            return res.json({
-                success: true,
-                message: "Բարի գալուստ",
-                user: { name: user.name, email: user.email }
-            })
-        })
-    })(req, res, next)
-})
 
 passport.use(new LocalStrategy(
     { usernameField: 'email' },
@@ -102,6 +61,50 @@ passport.deserializeUser((id, done) => {
     done(null, user)
 });
 
+app.post("/api/register", async (req, res) => {
+    try {
+        const { name, phoneNumber, email, password } = req.body
+
+        const usrExists = users.find(u => u.email === email);
+
+        if (usrExists) {
+            return res.status(400).json({ success: false, message: "Այս էլ. հասցեն արդեն գրանցված է" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUsr = {
+            id: Date.now(),
+            name,
+            phoneNumber,
+            email,
+            password: hashedPassword,
+            bookings: []
+        };
+        users.push(newUsr)
+        res.status(201).json({ success: true, message: "Գրանցումը հաջողվեց" })
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Սերվերի սխալ" })
+    }
+})
+
+app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+        if (err) return res.status(500).json({ success: false, message: "Սերվերի սխալ" });
+        if (!user) return res.status(401).json({ success: false, message: info.message });
+
+        req.logIn(user, (err) => {
+            if (err) return res.status(500).json({ success: false, message: "Մուքտի սխալ" });
+
+            return res.json({
+                success: true,
+                message: "Բարի գալուստ",
+                user: { name: user.name, email: user.email }
+            })
+        })
+    })(req, res, next)
+})
+
 app.post("/api/logout", (req, res) => {
     req.logout(function (err) {
         if (err) return res.status(500).json({ message: "Logout error" });
@@ -111,14 +114,46 @@ app.post("/api/logout", (req, res) => {
 
 app.get("/api/profile", (req, res) => {
     if (req.isAuthenticated()) {
-        return res.json({
-            name: req.user.name,
-            email: req.user.email,
-            phoneNumber: req.user.phoneNumber
-        });
+
+        const currentUser = users.find(u => u.id === req.user.id);
+
+        if (currentUser) {
+            return res.json({
+                name: currentUser.name,
+                email: currentUser.email,
+                phoneNumber: currentUser.phoneNumber,
+                bookings: currentUser.bookings || []
+            });
+        }
     }
     res.status(401).json({ message: "Not authenticated" });
 });
+
+app.post("/api/book", (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործեք" });
+
+    const { type, details, totalPrice, contactInfo } = req.body;
+    const userIndex = users.findIndex(u => u.id === req.user.id);
+
+    if (userIndex !== -1) {
+        const newOrder = {
+            id: Date.now(),
+            type, 
+            details, 
+            totalPrice,
+            contactInfo,
+            status: "Հաստատված",
+            orderedAt: new Date()
+        };
+
+        if (!users[userIndex].bookings) users[userIndex].bookings = [];
+        users[userIndex].bookings.push(newOrder);
+
+        return res.json({ success: true, message: "Պատվերը գրանցված է" });
+    }
+    res.status(404).json({ message: "Օգտատերը չի գտնվել" });
+});
+
 
 app.put("/api/user/update", (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործած չեք" });
@@ -132,10 +167,11 @@ app.put("/api/user/update", (req, res) => {
 
         req.user.name = name;
         req.user.phoneNumber = phoneNumber;
+
         return res.json({ success: true, user: users[userIndex] });
     }
     res.status(404).json({ message: "Օգտատերը չի գտնվել" });
-})
+});
 
 app.delete("/api/user/delete", (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործած չեք" });
@@ -151,9 +187,10 @@ app.delete("/api/user/delete", (req, res) => {
     }
 });
 
-app.get("/api/houses/:id",(req,res)=>{
+
+app.get("/api/houses/:id", (req, res) => {
     const house = houses.find(h => h.id === parseInt(req.params.id));
-    if (!house) return res.status(404).json({message: "Տունը չի գտնվել"});
+    if (!house) return res.status(404).json({ message: "Տունը չի գտնվել" });
     res.json(house)
 })
 
@@ -190,9 +227,8 @@ app.get("/api/houses", (req, res) => {
     res.json(filteredHouses);
 });
 
-app.get("/api/services", (req, res) => {
-    res.json(servicesData);
-});
+app.get("/api/services", (req, res) => res.json(servicesData));
+
 
 app.get("/api/sales", (req, res) => {
     res.json({

@@ -82,9 +82,38 @@ export default function Sales() {
     `relative pb-1 transition-all ${pathName === path ? "text-orange-500 after:w-full" : "text-gray-700 hover:text-orange-500 after:w-0 hover:after:w-full"} 
      after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[1px] after:bg-orange-500 after:transition-all after:duration-300`;
 
-  const handleOrderSubmit = () => {
-    if (formData.recipientName && formData.phoneNumber) setBookingStep(2);
-    else alert("Խնդրում ենք լրացնել բոլոր դաշտերը։");
+  const handleOrderSubmit = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!formData.recipientName || !formData.phoneNumber) {
+      alert("Խնդրում ենք լրացնել տվյալները");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: 'giftcard',
+          details: {
+            amount: selectedPrice,
+            recipient: formData.recipientName
+          },
+          totalPrice: parseInt(selectedPrice.replace(/[^0-9]/g, '')),
+          contactInfo: { name: user.name, phone: formData.phoneNumber }
+        }),
+        credentials: "include"
+      });
+      const data = await response.json();
+      if (data.success) {
+        setBookingStep(2); 
+      }
+    } catch (error) {
+      alert("Կապի սխալ");
+    }
   };
 
   return (
@@ -262,7 +291,7 @@ export default function Sales() {
           </div>
         </div>
       </div>
-      
+
       <footer className="bg-[#101623] text-white pt-10">
         <h2 className="text-center text-3xl mb-10 tracking-widest font-light uppercase">Կոնտակտներ</h2>
         <div className="flex flex-wrap justify-center gap-10 px-4 mb-10">

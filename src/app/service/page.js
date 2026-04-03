@@ -38,6 +38,37 @@ export default function Service() {
     });
   }, []);
 
+  const handleBookService = async (service) => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: 'service',
+          details: {
+            title: service.title,
+            image: service.image
+          },
+          totalPrice: service.price,
+          contactInfo: { name: user.name, email: user.email } 
+        }),
+        credentials: "include"
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert("Ծառայությունը հաջողությամբ ամրագրվեց");
+        router.push("/userPage");
+      }
+    } catch (error) {
+      alert("Կապի սխալ");
+    }
+  };
+
   useEffect(() => {
     fetch("http://localhost:5000/api/profile", {
       credentials: "include"
@@ -227,7 +258,7 @@ export default function Service() {
                       <span className="text-[18px] font-bold text-[#4B5563]">֏</span>
                     </div>
                   </div>
-                  <button className="px-7 py-1.5 rounded-full border border-orange-400 text-orange-500 font-semibold text-[14px] hover:bg-orange-500 hover:text-white transition-all">Ամրագրել</button>
+                  <button onClick={() => handleBookService(item)} className="px-7 py-1.5 rounded-full border border-orange-400 text-orange-500 font-semibold text-[14px] hover:bg-orange-500 hover:text-white transition-all">Ամրագրել</button>
                 </div>
               </div>
             </div>
