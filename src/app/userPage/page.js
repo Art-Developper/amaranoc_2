@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import {
     User, Globe, Search, Facebook, Instagram, Phone, Mail,
-    MapPin, Pencil, Trash2, LogOut, X, Menu, Calendar, Users
+    MapPin, Pencil, Trash2, LogOut, X, Menu, Calendar, Users, Tag
 } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
@@ -201,55 +201,108 @@ export default function UserPage() {
 
                 <div className="mt-20">
                     <div className="flex items-center gap-6 mb-12">
-                        <h3 className="text-3xl font-black text-gray-900 uppercase tracking-tighter italic border-l-8 border-orange-500 pl-6">Իմ Ամրագրումները</h3>
+                        <h3 className="text-3xl font-black text-gray-900 uppercase tracking-tighter italic border-l-8 border-orange-500 pl-6">
+                            Իմ Ամրագրումները
+                        </h3>
                         <div className="h-px bg-gray-100 flex-grow"></div>
                     </div>
 
                     {user?.bookings?.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {user.bookings.map((booking) => (
-                                <div key={booking.id} className="bg-white border border-gray-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group">
-                                    <div className="relative h-64 w-full overflow-hidden">
-                                        <img
-                                            src={booking.houseDetails?.image}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
-                                            alt="House"
-                                        />
-                                        <div className="absolute top-6 left-6 bg-[#ff9d43] text-white px-5 py-2 rounded-[20px] text-[10px] font-black shadow-xl uppercase tracking-widest">
-                                            ԱՄՐԱԳՐՎԱԾ Է
-                                        </div>
-                                    </div>
-                                    <div className="p-10">
-                                        <h4 className="text-2xl font-black text-gray-800 mb-6 tracking-tighter uppercase">{booking.houseDetails?.location}</h4>
-                                        <div className="flex flex-col gap-4 text-[15px] text-gray-500 mb-8 font-bold">
-                                            <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl">
-                                                <Calendar className="text-orange-500" size={22} />
-                                                <span>{new Date(booking.startDate).toLocaleDateString('hy-AM')} - {booking.endDate ? new Date(booking.endDate).toLocaleDateString('hy-AM') : '1 օր'}</span>
+                            {user.bookings.map((booking) => {
+
+                                if (booking.type === "house") {
+                                    return (
+                                        <div key={booking.id} className="bg-white border border-gray-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group">
+                                            <div className="relative h-60 overflow-hidden">
+                                                <img src={booking.houseDetails?.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="House" />
+                                                <div className="absolute top-6 left-6 bg-[#ff9d43] text-white px-5 py-2 rounded-[20px] text-[10px] font-black shadow-xl uppercase tracking-widest">ՏՈՒՆ</div>
                                             </div>
-                                            <div className="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl">
-                                                <Users className="text-orange-500" size={22} />
-                                                <span>{booking.guests.adults + booking.guests.kids} անձ</span>
+                                            <div className="p-8">
+                                                <h4 className="text-2xl font-black text-gray-800 mb-5 uppercase">{booking.houseDetails?.location}</h4>
+                                                <div className="space-y-3 mb-6 font-bold text-gray-500 text-sm">
+                                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
+                                                        <Calendar className="text-orange-500" size={18} />
+                                                        <span>{new Date(booking.startDate).toLocaleDateString("hy-AM")} - {booking.endDate ? new Date(booking.endDate).toLocaleDateString("hy-AM") : "1 օր"}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
+                                                        <Users className="text-orange-500" size={18} />
+                                                        <span>{(booking.guests?.adults || 0) + (booking.guests?.kids || 0)} անձ</span>
+                                                    </div>
+                                                </div>
+                                                <div className="border-t border-dashed pt-5 flex justify-between items-center">
+                                                    <span className="text-gray-400 font-black uppercase text-[10px]">Ընդհանուր արժեք</span>
+                                                    <span className="text-2xl font-black text-gray-900">{booking.totalPrice?.toLocaleString()} ֏</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="border-t border-dashed border-gray-200 pt-8 flex justify-between items-center">
-                                            <span className="text-gray-400 font-black uppercase text-[10px] tracking-[0.2em]">Ընդհանուր արժեք</span>
-                                            <span className="text-2xl font-black text-[#1d2331] tracking-tighter">{booking.totalPrice?.toLocaleString()} ֏</span>
+                                    );
+                                }
+
+                                if (booking.type === "service") {
+                                    return (
+                                        <div key={booking.id} className="bg-white border border-gray-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group">
+                                            <div className="relative h-60 overflow-hidden">
+                                                <img src={booking.details?.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Service" />
+                                                <div className="absolute top-6 left-6 bg-blue-500 text-white px-5 py-2 rounded-[20px] text-[10px] font-black shadow-xl uppercase tracking-widest">ԾԱՌԱՅՈՒԹՅՈՒՆ</div>
+                                            </div>
+                                            <div className="p-8">
+                                                <h4 className="text-2xl font-black text-gray-800 mb-5 uppercase">{booking.details?.title}</h4>
+                                                <div className="space-y-3 mb-6 font-bold text-gray-500 text-sm">
+                                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
+                                                        <Calendar className="text-blue-500" size={18} />
+                                                        <span>Ամսաթիվ՝ {new Date(booking.details?.date).toLocaleDateString("hy-AM")}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="border-t border-dashed pt-5 flex justify-between items-center">
+                                                    <span className="text-gray-400 font-black uppercase text-[10px]">Ծառայության գին</span>
+                                                    <span className="text-2xl font-black text-gray-900">{booking.totalPrice?.toLocaleString()} ֏</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            ))}
+                                    );
+                                }
+
+                                if (booking.type === "giftcard") {
+                                    return (
+                                        <div key={booking.id} className="bg-white border-2 border-orange-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all p-10 flex flex-col justify-between group relative">
+                                            <div className="absolute -top-4 -right-4 bg-orange-500/10 w-32 h-32 rounded-full blur-3xl"></div>
+                                            <div>
+                                                <div className="flex justify-between items-center mb-8">
+                                                    <div className="bg-[#ff9d43] text-white px-5 py-2 rounded-[20px] text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-200">ՆՎԵՐ ՔԱՐՏ</div>
+                                                    <Tag className="text-orange-400 rotate-90" size={28} />
+                                                </div>
+                                                <div className="mb-8">
+                                                    <span className="text-gray-400 font-black uppercase text-xs block mb-2 tracking-widest">Արժեթուղթ</span>
+                                                    <h4 className="text-4xl font-black text-gray-900 italic tracking-tighter">{booking.details?.giftCardAmount}</h4>
+                                                </div>
+                                                <div className="space-y-4 font-bold text-gray-600">
+                                                    <div className="flex items-center gap-3 bg-orange-50/50 p-3 rounded-2xl border border-orange-100/50">
+                                                        <User size={18} className="text-orange-500" />
+                                                        <span>Ստացող՝ {booking.details?.forWhom}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-10 border-t border-dashed pt-6 flex justify-between items-center">
+                                                <span className="text-gray-400 font-black uppercase text-[10px]">Գնված է</span>
+                                                <span className="text-2xl font-black text-[#1d2331]">{booking.totalPrice?.toLocaleString()} ֏</span>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                return null;
+                            })}
                         </div>
                     ) : (
                         <div className="bg-gray-50 border-4 border-dashed border-gray-100 rounded-[50px] p-24 text-center flex flex-col items-center gap-8">
-                            <div className="bg-white p-8 rounded-full shadow-lg text-gray-100">
-                                <Search size={64} />
-                            </div>
+                            <div className="bg-white p-8 rounded-full shadow-lg text-gray-100"><Search size={64} /></div>
                             <p className="text-gray-400 font-black text-2xl italic uppercase tracking-tighter">Դուք դեռևս չունեք ամրագրված տներ</p>
-                            <Link href="/" className="bg-[#ff9d43] text-white px-12 py-4 rounded-full font-black uppercase tracking-widest text-sm hover:bg-orange-500 transition-all shadow-xl shadow-orange-100">Բացահայտել տները</Link>
+                            <Link href="/" className="bg-[#ff9d43] text-white px-12 py-4 rounded-full font-black uppercase tracking-widest text-sm">Բացահայտել տները</Link>
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
 
             {activeModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
@@ -301,7 +354,8 @@ export default function UserPage() {
                         )}
                     </div>
                 </div>
-            )}
+            )
+            }
 
             <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
                 <div className="absolute inset-0 z-0">

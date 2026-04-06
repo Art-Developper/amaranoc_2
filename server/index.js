@@ -132,28 +132,42 @@ app.get("/api/profile", (req, res) => {
 app.post("/api/book", (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործեք" });
 
-    const { type, details, totalPrice, contactInfo } = req.body;
+
+    const { type, houseId, startDate, endDate, guests, totalPrice, contactInfo, details } = req.body;
+
     const userIndex = users.findIndex(u => u.id === req.user.id);
 
     if (userIndex !== -1) {
-        const newOrder = {
+        let newBooking = {
             id: Date.now(),
-            type, 
-            details, 
+            type: type || 'house', 
             totalPrice,
             contactInfo,
-            status: "Հաստատված",
-            orderedAt: new Date()
+            bookedAt: new Date()
         };
 
-        if (!users[userIndex].bookings) users[userIndex].bookings = [];
-        users[userIndex].bookings.push(newOrder);
+        if (type === 'giftcard') {
+            newBooking.details = details;
+        } else if (type === 'service') {
+            newBooking.details = details; 
+        } else {
+            const bookedHouse = houses.find(h => h.id === parseInt(houseId));
+            newBooking.startDate = startDate;
+            newBooking.endDate = endDate;
+            newBooking.guests = guests;
+            newBooking.houseDetails = {
+                location: bookedHouse?.location,
+                image: Array.isArray(bookedHouse?.image) ? bookedHouse.image[0] : bookedHouse?.image
+            };
+        }
 
-        return res.json({ success: true, message: "Պատվերը գրանցված է" });
+        users[userIndex].bookings.push(newBooking);
+        console.log(`Նոր ${type} գրանցվեց օգտատիրոջ մոտ:`, newBooking);
+
+        return res.json({ success: true, message: "Ամրագրումը հաջողվեց" });
     }
     res.status(404).json({ message: "Օգտատերը չի գտնվել" });
 });
-
 
 app.put("/api/user/update", (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործած չեք" });
