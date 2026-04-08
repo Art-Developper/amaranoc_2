@@ -5,15 +5,24 @@ import bcrypt from "bcryptjs";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import mongoose from "mongoose";
 import { houses, salesHouses, discounts, servicesData, sectionData, prices } from "./data.js";
 
-
 dotenv.config();
-const users = [];
 
+// --- 1. MONGODB USER MODEL ---
+const userSchema = new mongoose.Schema({
+    name: String,
+    phoneNumber: String,
+    email: { type: String, unique: true, required: true },
+    password: { type: String, required: true },
+    bookings: { type: Array, default: [] }
+});
+const User = mongoose.model("User", userSchema);
 
 let app = express();
 
+// --- 2. MIDDLEWARES ---
 app.use(cors({
     origin: "http://localhost:3000",
     credentials: true
@@ -26,7 +35,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,
+        secure: false, // localhost-ի համար
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
@@ -34,122 +43,96 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// --- 3. PASSPORT STRATEGY ---
 passport.use(new LocalStrategy(
     { usernameField: 'email' },
     async (email, password, done) => {
         try {
-            const user = users.find(u => u.email === email)
-            if (!user) {
-                return done(null, false, { message: "Օգտատերը չի գտնվել" })
-            }
+            const user = await User.findOne({ email });
+            if (!user) return done(null, false, { message: "Օգտատերը չի գտնվել" });
 
             const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return done(null, false, { message: "Սխալ գաղտնաբառ" });
-            }
+            if (!isMatch) return done(null, false, { message: "Սխալ գաղտնաբառ" });
 
-            return done(null, user)
-        } catch (err) {
-            return done(err)
-        }
+            return done(null, user);
+        } catch (err) { return done(err); }
     }
-))
+));
 
 passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser((id, done) => {
-    const user = users.find(u => u.id === id);
-    done(null, user)
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (err) { done(err); }
 });
 
+// --- 4. API ROUTES ---
+
+// Register
 app.post("/api/register", async (req, res) => {
     try {
-        const { name, phoneNumber, email, password } = req.body
-
-        const usrExists = users.find(u => u.email === email);
+        const { name, phoneNumber, email, password } = req.body;
+        const usrExists = await User.findOne({ email });
 
         if (usrExists) {
             return res.status(400).json({ success: false, message: "Այս էլ. հասցեն արդեն գրանցված է" });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const newUsr = new User({
+            name, phoneNumber, email, password: hashedPassword, bookings: []
+        });
 
-        const newUsr = {
-            id: Date.now(),
-            name,
-            phoneNumber,
-            email,
-            password: hashedPassword,
-            bookings: []
-        };
-        users.push(newUsr)
-        res.status(201).json({ success: true, message: "Գրանցումը հաջողվեց" })
+        await newUsr.save();
+        res.status(201).json({ success: true, message: "Գրանցումը հաջողվեց" });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Սերվերի սխալ" })
+        res.status(500).json({ success: false, message: "Սերվերի սխալ" });
     }
-})
+});
 
+// Login
 app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
         if (err) return res.status(500).json({ success: false, message: "Սերվերի սխալ" });
         if (!user) return res.status(401).json({ success: false, message: info.message });
 
         req.logIn(user, (err) => {
-            if (err) return res.status(500).json({ success: false, message: "Մուքտի սխալ" });
-
-            return res.json({
-                success: true,
-                message: "Բարի գալուստ",
-                user: { name: user.name, email: user.email }
-            })
-        })
-    })(req, res, next)
-})
-
-app.post("/api/logout", (req, res) => {
-    req.logout(function (err) {
-        if (err) return res.status(500).json({ message: "Logout error" });
-        res.json({ success: true });
-    });
+            if (err) return res.status(500).json({ success: false, message: "Մուտքի սխալ" });
+            return res.json({ success: true, message: "Բարի գալուստ", user: { name: user.name, email: user.email } });
+        });
+    })(req, res, next);
 });
 
-app.get("/api/profile", (req, res) => {
+// Profile
+app.get("/api/profile", async (req, res) => {
     if (req.isAuthenticated()) {
-
-        const currentUser = users.find(u => u.id === req.user.id);
-
-        if (currentUser) {
-            return res.json({
-                name: currentUser.name,
-                email: currentUser.email,
-                phoneNumber: currentUser.phoneNumber,
-                bookings: currentUser.bookings || []
-            });
-        }
+        const user = await User.findById(req.user.id);
+        return res.json(user);
     }
     res.status(401).json({ message: "Not authenticated" });
 });
 
-app.post("/api/book", (req, res) => {
+// Booking
+app.post("/api/book", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործեք" });
-
 
     const { type, houseId, startDate, endDate, guests, totalPrice, contactInfo, details } = req.body;
 
-    const userIndex = users.findIndex(u => u.id === req.user.id);
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ message: "Օգտատերը չի գտնվել" });
 
-    if (userIndex !== -1) {
         let newBooking = {
             id: Date.now(),
-            type: type || 'house', 
+            type: type || 'house',
             totalPrice,
             contactInfo,
             bookedAt: new Date()
         };
 
-        if (type === 'giftcard') {
+        if (type === 'giftcard' || type === 'service') {
             newBooking.details = details;
-        } else if (type === 'service') {
-            newBooking.details = details; 
         } else {
             const bookedHouse = houses.find(h => h.id === parseInt(houseId));
             newBooking.startDate = startDate;
@@ -161,100 +144,68 @@ app.post("/api/book", (req, res) => {
             };
         }
 
-        users[userIndex].bookings.push(newBooking);
-        console.log(`Նոր ${type} գրանցվեց օգտատիրոջ մոտ:`, newBooking);
+        user.bookings.push(newBooking);
+        await user.save();
 
-        return res.json({ success: true, message: "Ամրագրումը հաջողվեց" });
+        res.json({ success: true, message: "Ամրագրումը հաջողվեց" });
+    } catch (error) {
+        res.status(500).json({ message: "Սերվերի սխալ" });
     }
-    res.status(404).json({ message: "Օգտատերը չի գտնվել" });
 });
 
-app.put("/api/user/update", (req, res) => {
+// Update User
+app.put("/api/user/update", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործած չեք" });
-
     const { name, phoneNumber } = req.body;
-    const userIndex = users.findIndex(u => u.id === req.user.id);
-
-    if (userIndex !== -1) {
-        users[userIndex].name = name;
-        users[userIndex].phoneNumber = phoneNumber;
-
-        req.user.name = name;
-        req.user.phoneNumber = phoneNumber;
-
-        return res.json({ success: true, user: users[userIndex] });
-    }
-    res.status(404).json({ message: "Օգտատերը չի գտնվել" });
+    try {
+        const updatedUser = await User.findByIdAndUpdate(req.user.id, { name, phoneNumber }, { new: true });
+        res.json({ success: true, user: updatedUser });
+    } catch (error) { res.status(500).json({ message: "Սխալ թարմացման ժամանակ" }); }
 });
 
-app.delete("/api/user/delete", (req, res) => {
+// Delete User
+app.delete("/api/user/delete", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Մուտք գործած չեք" });
-
-    const userIndex = users.findIndex(u => u.id === req.user.id);
-    if (userIndex !== -1) {
-        users.splice(userIndex, 1);
-        req.logOut(() => {
-            res.json({ success: true });
-        });
-    } else {
-        res.status(404).json({ message: "Սխալ" });
-    }
+    try {
+        await User.findByIdAndDelete(req.user.id);
+        req.logout(() => res.json({ success: true }));
+    } catch (error) { res.status(500).json({ message: "Սխալ ջնջման ժամանակ" }); }
 });
 
-
+// Data routes
 app.get("/api/houses/:id", (req, res) => {
     const house = houses.find(h => h.id === parseInt(req.params.id));
-    if (!house) return res.status(404).json({ message: "Տունը չի գտնվել" });
-    res.json(house)
-})
+    res.json(house || { message: "Չի գտնվել" });
+});
 
 app.get("/api/houses", (req, res) => {
-    const { search, region, minPrice, maxPrice, people } = req.query;
-    let filteredHouses = [...houses];
-
+    const { search, region } = req.query;
+    let result = [...houses];
     if (search) {
         const regex = new RegExp(search.split("").join(".*"), "i");
-        filteredHouses = filteredHouses.filter(h => regex.test(h.location));
+        result = result.filter(h => regex.test(h.location));
     }
-
     if (region) {
-        const regionsArray = Array.isArray(region) ? region : [region];
-        filteredHouses = filteredHouses.filter(h => regionsArray.includes(h.location));
+        const regArr = Array.isArray(region) ? region : [region];
+        result = result.filter(h => regArr.some(r => h.location.includes(r)));
     }
-
-    if (people) {
-        filteredHouses = filteredHouses.filter(h => {
-            const capacity = parseInt(h.people.split('-').pop());
-            return capacity >= parseInt(people);
-        });
-    }
-
-    if (minPrice || maxPrice) {
-        filteredHouses = filteredHouses.filter(h => {
-            const price = parseInt(h.price.replace(/[^0-9]/g, ''));
-            const min = minPrice ? parseInt(minPrice) : 0;
-            const max = maxPrice ? parseInt(maxPrice) : Infinity;
-            return price >= min && price <= max;
-        });
-    }
-
-    res.json(filteredHouses);
+    res.json(result);
 });
 
 app.get("/api/services", (req, res) => res.json(servicesData));
+app.get("/api/sales", (req, res) => res.json({ discounts, prices, salesHouses }));
+app.get("/api/about", (req, res) => res.json(sectionData));
 
-
-app.get("/api/sales", (req, res) => {
-    res.json({
-        discounts: discounts,
-        prices: prices,
-        salesHouses: salesHouses
-    }
-    )
-})
-
-app.get("/api/about", (req, res) => {
-    res.json(sectionData);
+app.post("/api/logout", (req, res) => {
+    req.logout(() => res.json({ success: true }));
 });
 
-app.listen(process.env.PORT)
+// --- 5. CONNECT AND START ---
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ Connected to MongoDB Atlas");
+    app.listen(process.env.PORT || 5000, () => {
+      console.log(`🚀 Server is running on port ${process.env.PORT || 5000}`);
+    });
+  })
+  .catch(err => console.error("❌ MongoDB connection error:", err));
