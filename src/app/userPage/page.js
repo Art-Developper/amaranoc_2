@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import {
     User, Globe, Search, Facebook, Instagram, Phone, Mail,
-    MapPin, Pencil, Trash2, LogOut, X, Menu, Calendar, Users, Tag
+    MapPin, Pencil, Trash2, LogOut, X, Menu, Calendar, Users, Tag, Send
 } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
@@ -191,6 +191,12 @@ export default function UserPage() {
                         <span className="text-lg font-bold text-gray-600 tracking-tight">{user?.email}</span>
                     </div>
                     <div className="flex items-center gap-4">
+                        <Link
+                            href="/chat"
+                            className="px-8 py-3 bg-[#1d2331] text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-black transition shadow-xl shadow-gray-200 flex items-center gap-3"
+                        >
+                            <Send size={16} /> Իմ չատերը
+                        </Link>
                         <button onClick={() => setActiveModal('edit')} className="p-3.5 border border-gray-200 rounded-full hover:bg-gray-50 transition text-gray-400 hover:text-orange-500"><Pencil size={20} /></button>
                         <button onClick={() => setActiveModal('delete')} className="px-8 py-3 border border-gray-200 rounded-full text-gray-800 font-black text-xs uppercase tracking-widest hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition">Ջնջել պրոֆիլը</button>
                         <button onClick={() => setActiveModal('logout')} className="px-8 py-3 bg-[#1d2331] text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-black transition shadow-xl shadow-gray-200 flex items-center gap-3">
