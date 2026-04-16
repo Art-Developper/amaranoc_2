@@ -142,7 +142,7 @@ app.post("/api/chat", async (req, res) => {
 
 app.get("/api/users", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const keyword = req.query.search ? {
         $or: [
             { name: { $regex: req.query.search, $options: "i" } },
@@ -255,6 +255,46 @@ app.delete("/api/user/delete", async (req, res) => {
         req.logout(() => res.json({ success: true }));
     } catch (error) { res.status(500).send(error); }
 });
+
+app.get("/api/users/all", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+        const allUsers = await User.find({ _id: { $ne: req.user._id } }).select("-password");
+        res.json(allUsers);
+    } catch (error) {
+        res.status(500).send(error);
+    }
+});
+
+app.get("/api/chat", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("Not authenticated");
+    try {
+        const chats = await Chat.find({
+            users: { $elemMatch: { $eq: req.user._id } }
+        })
+            .populate("users", "-password")
+            .populate("groupAdmin", "-password")
+            .populate("latestMessage")
+            .sort({ updatedAt: -1 });
+
+        res.status(200).send(chats);
+    } catch (error) {
+        res.status(500).send(error);
+    }
+});
+
+// 3. Ստանալ կոնկրետ չատի հաղորդագրությունների պատմությունը
+app.get("/api/message/:chatId", async (req, res) => {
+    try {
+        const messages = await Message.find({ chat: req.params.chatId })
+            .populate("sender", "name email")
+            .populate("chat");
+        res.json(messages);
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+});
+
 
 app.get("/api/houses", (req, res) => {
     const { search } = req.query;

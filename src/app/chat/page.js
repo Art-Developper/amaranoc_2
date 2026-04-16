@@ -15,33 +15,37 @@ let socket;
 export default function ChatPage() {
     const router = useRouter();
 
+    // --- ՀԻՄՆԱԿԱՆ ՍԹԵՅԹԵՐ ---
     const [user, setUser] = useState(null);
     const [chats, setChats] = useState([]);
+    const [allUsers, setAllUsers] = useState([]); // Բոլոր օգտատերերի ցուցակը
     const [selectedChat, setSelectedChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
-    const [recording, setRecording] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // --- CALL STATES ---
+    // --- ՁԱՅՆԱՅԻՆԻ ՍԹԵՅԹԵՐ ---
+    const [recording, setRecording] = useState(false);
+    const [mediaRecorder, setMediaRecorder] = useState(null);
+
+    // --- ԶԱՆԳԵՐԻ ՍԹԵՅԹԵՐ ---
     const [callModal, setCallModal] = useState(false);
     const [receivingCall, setReceivingCall] = useState(false);
     const [callAccepted, setCallAccepted] = useState(false);
     const [callerSignal, setCallerSignal] = useState(null);
     const [callerName, setCallerName] = useState("");
     const [stream, setStream] = useState(null);
-
     const myVideo = useRef();
     const userVideo = useRef();
     const peerInstance = useRef(null);
 
-    // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: ՈՐՈՆՄԱՆ ՄՈԴԱԼԻ ՍԹԵՅԹԵՐ ---
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [usersList, setUsersList] = useState([]);
-    const [userSearch, setUserSearch] = useState("");
+    // --- ԽՄԲԱՅԻՆ ՉԱՏԻ ՍԹԵՅԹԵՐ ---
+    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+    const [groupName, setGroupName] = useState("");
+    const [selectedUsersForGroup, setSelectedUsersForGroup] = useState([]);
 
-    // 1. Login & Socket Setup
+    // 1. Մուտքի և Socket-ի նախնական կարգավորում
     useEffect(() => {
         fetch("http://localhost:5000/api/profile", { credentials: "include" })
             .then(res => res.ok ? res.json() : Promise.reject())
@@ -50,47 +54,50 @@ export default function ChatPage() {
                 socket = io(ENDPOINT);
                 socket.emit("setup", data);
 
-                const peer = new Peer();
+                const peer = new Peer(data._id);
                 peerInstance.current = peer;
 
+                // Լսել եկող զանգերը
+                peer.on('call', (call) => {
+                    setReceivingCall(true);
+                    setCallModal(true);
+                    setCallerName("Անհայտ օգտատեր");
+                    setCallerSignal(call);
+                });
+
                 fetchChats();
+                fetchAllUsers();
             })
             .catch(() => router.push("/login"));
 
         return () => socket?.disconnect();
     }, []);
 
-    // 2. Socket Listeners
+    // 2. Լսել Socket հաղորդագրությունները
     useEffect(() => {
         if (!socket) return;
-
         const handleMessage = (newMessageReceived) => {
             if (selectedChat && selectedChat._id === newMessageReceived.chat._id) {
                 setMessages((prev) => [...prev, newMessageReceived]);
             }
             fetchChats();
         };
-
-        const handleIncomingCall = (data) => {
-            setReceivingCall(true);
-            setCallerName(data.name);
-            setCallerSignal(data.signal);
-            setCallModal(true);
-        };
-
         socket.on("message received", handleMessage);
-        socket.on("call incoming", handleIncomingCall);
+        return () => socket.off("message received", handleMessage);
+    }, [selectedChat]);
 
-        return () => {
-            socket.off("message received", handleMessage);
-            socket.off("call incoming", handleIncomingCall);
-        };
-    }, [selectedChat, socket]);
+    // --- ՖՈՒՆԿՑԻԱՆԵՐ ---
 
     const fetchChats = async () => {
         const res = await fetch(`${ENDPOINT}/api/chat`, { credentials: "include" });
         const data = await res.json();
         setChats(data);
+    };
+
+    const fetchAllUsers = async () => {
+        const res = await fetch(`${ENDPOINT}/api/users`, { credentials: "include" });
+        const data = await res.json();
+        setAllUsers(data);
     };
 
     const fetchMessages = async () => {
@@ -121,15 +128,6 @@ export default function ChatPage() {
         setNewMessage("");
     };
 
-    // --- ՓՈՓՈԽՈՒԹՅՈՒՆ: ՕԳՏԱՏԵՐԵՐԻ ՈՐՈՆՄԱՆ ՖՈՒՆԿՑԻԱՆԵՐ ---
-    const handleSearchUsers = async (query) => {
-        setUserSearch(query);
-        if (!query) return setUsersList([]);
-        const res = await fetch(`${ENDPOINT}/api/users?search=${query}`, { credentials: "include" });
-        const data = await res.json();
-        setUsersList(data);
-    };
-
     const accessChat = async (userId) => {
         const res = await fetch(`${ENDPOINT}/api/chat`, {
             method: "POST",
@@ -139,13 +137,27 @@ export default function ChatPage() {
         });
         const data = await res.json();
         setSelectedChat(data);
-        setIsSearchOpen(false);
-        setUserSearch("");
-        setUsersList([]);
         fetchChats();
     };
 
-    // --- VOICE & CALL LOGIC (Նույնն է մնացել) ---
+    const createGroupChat = async () => {
+        if (!groupName || selectedUsersForGroup.length < 2) {
+            alert("Մուտքագրեք անուն և ընտրեք առնվազն 2 հոգի");
+            return;
+        }
+        const res = await fetch(`${ENDPOINT}/api/chat/group`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: groupName, users: selectedUsersForGroup }),
+            credentials: "include"
+        });
+        const data = await res.json();
+        setChats([data, ...chats]);
+        setIsGroupModalOpen(false);
+        setGroupName("");
+        setSelectedUsersForGroup([]);
+    };
+
     const toggleRecording = async () => {
         if (!recording) {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -188,22 +200,18 @@ export default function ChatPage() {
         const localStream = await navigator.mediaDevices.getUserMedia({ video: type === 'video', audio: true });
         setStream(localStream);
         if (myVideo.current) myVideo.current.srcObject = localStream;
-        const peer = peerInstance.current;
-        const call = peer.call(userToCall, localStream);
-        socket.emit("call user", { userToCall, signalData: peer.id, from: user._id, name: user.name, type });
+        const call = peerInstance.current.call(userToCall, localStream);
         call.on('stream', (remoteStream) => { if (userVideo.current) userVideo.current.srcObject = remoteStream; });
         setCallAccepted(true);
     };
 
     const answerCall = async () => {
-        setCallAccepted(true);
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setStream(localStream);
         if (myVideo.current) myVideo.current.srcObject = localStream;
-        peerInstance.current.on('call', (call) => {
-            call.answer(localStream);
-            call.on('stream', (remoteStream) => { if (userVideo.current) userVideo.current.srcObject = remoteStream; });
-        });
+        callerSignal.answer(localStream);
+        callerSignal.on('stream', (remoteStream) => { if (userVideo.current) userVideo.current.srcObject = remoteStream; });
+        setCallAccepted(true);
         setReceivingCall(false);
     };
 
@@ -214,45 +222,52 @@ export default function ChatPage() {
         }
     };
 
-    const filteredChats = chats.filter(c => {
-        const chatName = c.isGroupChat ? c.chatName : c.users.find(u => u._id !== user?._id)?.name;
-        return chatName?.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-
     return (
         <div className="flex h-screen bg-[#f3f4f6] p-4 md:p-10 gap-0 overflow-hidden font-sans">
 
-            {/* SIDEBAR */}
+            {/* --- SIDEBAR --- */}
             <aside className={`w-full md:w-[400px] bg-white border-r flex flex-col rounded-l-[40px] shadow-sm ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-8 flex justify-between items-center">
                     <h2 className="text-3xl font-black italic tracking-tighter text-gray-800">Messages</h2>
-                    {/* --- ՓՈՓՈԽՈՒԹՅՈՒՆ: Plus կոճակը հիմա բացում է որոնումը --- */}
-                    <button onClick={() => setIsSearchOpen(true)} className="p-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition shadow-lg shadow-orange-100">
+                    <button onClick={() => setIsGroupModalOpen(true)} className="p-3 bg-orange-500 text-white rounded-full hover:bg-black transition shadow-lg shadow-orange-100">
                         <Plus size={22} />
                     </button>
                 </div>
 
                 <div className="px-8 mb-8 relative">
-                    <input type="text" placeholder="Search contact..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-gray-50 p-4 pl-12 rounded-[20px] outline-none border border-transparent focus:border-orange-200" />
+                    <input type="text" placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full bg-gray-50 p-4 pl-12 rounded-[20px] outline-none border focus:border-orange-200" />
                     <Search className="absolute left-12 top-4.5 text-gray-400" size={20} />
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 space-y-3 no-scrollbar">
-                    {filteredChats.map((chat) => (
-                        <div key={chat._id} onClick={() => setSelectedChat(chat)} className={`flex items-center gap-4 p-5 rounded-[30px] transition-all ${selectedChat?._id === chat._id ? 'bg-orange-500 text-white shadow-xl' : 'hover:bg-gray-50 bg-white'}`}>
-                            <div className="w-14 h-14 bg-gray-200 rounded-full flex-shrink-0 border-2 border-white overflow-hidden shadow-sm">
-                                <img src={`https://ui-avatars.com/api/?name=${chat.isGroupChat ? chat.chatName : chat.users.find(u => u._id !== user?._id)?.name}&background=random`} alt="avatar" />
+                <div className="flex-1 overflow-y-auto px-4 space-y-6 no-scrollbar pb-10">
+                    {/* Active Chats */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-4">Active Chats</p>
+                        {chats.map((chat) => (
+                            <div key={chat._id} onClick={() => setSelectedChat(chat)} className={`flex items-center gap-4 p-5 rounded-[30px] cursor-pointer transition-all ${selectedChat?._id === chat._id ? 'bg-orange-500 text-white shadow-xl' : 'hover:bg-gray-50'}`}>
+                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center font-black text-orange-500 border uppercase">{chat.isGroupChat ? "G" : chat.users.find(u => u._id !== user?._id)?.name.charAt(0)}</div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold truncate">{chat.isGroupChat ? chat.chatName : chat.users.find(u => u._id !== user?._id)?.name}</h4>
+                                    <p className="text-xs truncate opacity-70">{chat.latestMessage?.content || "Click to open"}</p>
+                                </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-base truncate">{chat.isGroupChat ? chat.chatName : chat.users.find(u => u._id !== user?._id)?.name}</h4>
-                                <p className="text-xs truncate opacity-70">{chat.latestMessage ? chat.latestMessage.content : "No messages..."}</p>
+                        ))}
+                    </div>
+
+                    {/* All Users */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-4">All Users</p>
+                        {allUsers.map((u) => (
+                            <div key={u._id} onClick={() => accessChat(u._id)} className="flex items-center gap-4 p-4 hover:bg-orange-50 rounded-[25px] cursor-pointer transition-all">
+                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-400 border uppercase">{u.name.charAt(0)}</div>
+                                <h4 className="font-bold text-gray-700 text-sm">{u.name}</h4>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </aside>
 
-            {/* CHAT WINDOW */}
+            {/* --- MAIN CHAT WINDOW --- */}
             <main className={`flex-1 bg-white rounded-r-[40px] flex flex-col relative ${!selectedChat ? 'hidden md:flex items-center justify-center' : 'flex'}`}>
                 {selectedChat ? (
                     <>
@@ -261,9 +276,7 @@ export default function ChatPage() {
                                 <button className="md:hidden p-2" onClick={() => setSelectedChat(null)}><ChevronLeft /></button>
                                 <div className="w-12 h-12 bg-green-500 rounded-full border-4 border-white shadow-md" />
                                 <div>
-                                    <h3 className="font-black text-gray-800 text-lg uppercase tracking-tighter">
-                                        {selectedChat.isGroupChat ? selectedChat.chatName : selectedChat.users.find(u => u._id !== user?._id)?.name}
-                                    </h3>
+                                    <h3 className="font-black text-gray-800 text-lg uppercase tracking-tighter">{selectedChat.isGroupChat ? selectedChat.chatName : selectedChat.users.find(u => u._id !== user?._id)?.name}</h3>
                                     <span className="text-[10px] text-green-500 font-black uppercase tracking-[0.2em]">Online</span>
                                 </div>
                             </div>
@@ -278,18 +291,16 @@ export default function ChatPage() {
                             {messages.map((m, i) => (
                                 <div key={i} className={`flex ${m.sender._id === user?._id ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[70%] p-4 rounded-[25px] font-medium text-[15px] shadow-sm
-                                        ${m.sender._id === user?._id ? 'bg-[#1d2331] text-white rounded-br-none' : 'bg-white text-gray-700 rounded-bl-none border border-gray-100'}`}
-                                    >
+                                        ${m.sender._id === user?._id ? 'bg-[#1d2331] text-white rounded-br-none' : 'bg-white text-gray-700 rounded-bl-none border border-gray-100'}`}>
                                         {m.messageType === "voice" ? <audio controls src={m.fileUrl} className="h-8 w-40" /> : m.content}
-                                        <div className="text-[9px] mt-1 opacity-50 text-right uppercase font-black">{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                        <div className="text-[9px] mt-1 opacity-50 text-right font-black">{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
                         <div className="p-8 bg-white border-t rounded-br-[40px]">
-                            <div className="flex items-center gap-4 bg-gray-50 p-2 pl-6 rounded-full border border-gray-100 shadow-inner">
-                                <button className="p-2 bg-white rounded-full shadow-sm text-gray-400">+</button>
+                            <div className="flex items-center gap-4 bg-gray-50 p-2 pl-6 rounded-full border border-gray-100 shadow-inner group transition-all">
                                 <input type="text" placeholder="Write a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} className="flex-1 bg-transparent outline-none font-bold text-gray-700" />
                                 <button onClick={toggleRecording} className={`p-3 transition-all rounded-full ${recording ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:text-orange-500'}`}>{recording ? <MicOff size={22} /> : <Mic size={22} />}</button>
                                 <button onClick={sendMessage} className="p-4 bg-orange-500 text-white rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all"><Send size={20} /></button>
@@ -316,56 +327,34 @@ export default function ChatPage() {
                         {callAccepted && (
                             <div className="flex-1 bg-gray-900 rounded-[40px] overflow-hidden relative border-2 border-white/10 shadow-2xl">
                                 <video playsInline ref={userVideo} autoPlay className="w-full h-full object-cover" />
-                                <span className="absolute bottom-5 left-5 bg-black/50 px-4 py-1 rounded-full text-xs font-bold uppercase">{callerName || "Մյուս կողմը"}</span>
                             </div>
                         )}
                     </div>
                     <div className="mt-20 flex gap-10">
-                        {receivingCall && !callAccepted ? (
-                            <button onClick={answerCall} className="bg-green-500 p-8 rounded-full shadow-2xl hover:scale-110 transition animate-bounce"><Phone size={30} /></button>
-                        ) : null}
+                        {receivingCall && !callAccepted && <button onClick={answerCall} className="bg-green-500 p-8 rounded-full shadow-2xl hover:scale-110 transition animate-bounce"><Phone size={30} /></button>}
                         <button onClick={() => window.location.reload()} className="bg-red-500 p-8 rounded-full shadow-2xl hover:scale-110 transition"><PhoneOff size={30} /></button>
                     </div>
                 </div>
             )}
 
-            {/* --- ՓՈՓՈԽՈՒԹՅՈՒՆ: ՕԳՏԱՏԵՐԵՐԻ ՈՐՈՆՄԱՆ ՄՈԴԱԼ --- */}
-            {isSearchOpen && (
+            {/* --- GROUP MODAL --- */}
+            {isGroupModalOpen && (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[40px] w-full max-w-md shadow-2xl p-10 animate-in zoom-in-95 duration-200 border border-gray-100">
+                    <div className="bg-white rounded-[40px] w-full max-w-md shadow-2xl p-10 animate-in zoom-in-95 border border-gray-100">
                         <div className="flex justify-between items-center mb-8">
-                            <h3 className="text-2xl font-black uppercase italic tracking-tighter">New Chat</h3>
-                            <button onClick={() => setIsSearchOpen(false)} className="text-gray-400 hover:text-black transition-colors"><X size={28} /></button>
+                            <h3 className="text-2xl font-black uppercase italic tracking-tighter">New Group</h3>
+                            <button onClick={() => setIsGroupModalOpen(false)} className="text-gray-400 hover:text-black"><X size={28} /></button>
                         </div>
-
-                        <div className="relative mb-8">
-                            <input
-                                type="text"
-                                placeholder="Type name or email..."
-                                className="w-full bg-gray-50 p-5 rounded-[20px] outline-none border-2 border-transparent focus:border-orange-400 font-bold transition-all"
-                                value={userSearch}
-                                onChange={(e) => handleSearchUsers(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 no-scrollbar">
-                            {usersList.map((u) => (
-                                <div
-                                    key={u._id}
-                                    onClick={() => accessChat(u._id)}
-                                    className="flex items-center gap-4 p-4 hover:bg-orange-50 rounded-[25px] cursor-pointer border border-transparent hover:border-orange-200 transition-all group"
-                                >
-                                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center font-black text-orange-500 border-2 border-white shadow-sm group-hover:bg-white transition-all">
-                                        {u.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 text-lg">{u.name}</h4>
-                                        <p className="text-xs text-gray-400 font-medium">{u.email}</p>
-                                    </div>
+                        <input type="text" placeholder="Group Name..." className="w-full bg-gray-50 p-5 rounded-2xl outline-none border focus:border-orange-400 mb-6 font-bold" value={groupName} onChange={e => setGroupName(e.target.value)} />
+                        <div className="max-h-[250px] overflow-y-auto space-y-2 mb-8 pr-2 no-scrollbar">
+                            {allUsers.map(u => (
+                                <div key={u._id} onClick={() => setSelectedUsersForGroup(prev => prev.includes(u._id) ? prev.filter(id => id !== u._id) : [...prev, u._id])} className={`flex items-center justify-between p-4 rounded-2xl cursor-pointer border-2 transition-all ${selectedUsersForGroup.includes(u._id) ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-transparent'}`}>
+                                    <span className="font-bold text-gray-700">{u.name}</span>
+                                    {selectedUsersForGroup.includes(u._id) && <CheckCircle2 size={20} className="text-orange-500" />}
                                 </div>
                             ))}
-                            {usersList.length === 0 && userSearch && <p className="text-center text-gray-400 italic py-10 font-bold">User not found</p>}
                         </div>
+                        <button onClick={createGroupChat} className="w-full py-5 bg-orange-500 text-white rounded-full font-black text-lg shadow-lg hover:bg-black transition-all">CREATE GROUP</button>
                     </div>
                 </div>
             )}
