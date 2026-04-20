@@ -174,17 +174,29 @@ app.post("/api/chat/group", async (req, res) => {
 app.post("/api/message", async (req, res) => {
     const { content, chatId, messageType, fileUrl } = req.body;
     try {
-        const newMessage = await Message.create({
+        let newMessage = await Message.create({
             sender: req.user._id,
             content,
             chat: chatId,
             messageType: messageType || "text",
             fileUrl: fileUrl || ""
         });
+
+        // Թարմացնում ենք վերջին հաղորդագրությունը չատում
         await Chat.findByIdAndUpdate(chatId, { latestMessage: newMessage });
-        const fullMessage = await Message.findById(newMessage._id).populate("sender", "name email");
-        res.json(fullMessage);
-    } catch (error) { res.status(500).send(error); }
+
+        // ԿԱՐԵՎՈՐ։ Populate ենք անում sender-ը և chat-ի users-ը
+        newMessage = await Message.findById(newMessage._id)
+            .populate("sender", "name email")
+            .populate({
+                path: "chat",
+                populate: { path: "users", select: "name email" }
+            });
+
+        res.json(newMessage);
+    } catch (error) { 
+        res.status(500).send(error); 
+    }
 });
 
 // Ջնջել ամբողջ չատի պատմությունը (Ձեր ուզած հնարավորությունը)
