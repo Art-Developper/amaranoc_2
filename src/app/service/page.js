@@ -15,6 +15,9 @@ import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { fetchData } from "@/lib/api.js"
 
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
+
 export default function Service() {
   const pathName = usePathname();
   const router = useRouter();
@@ -52,8 +55,11 @@ export default function Service() {
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(new Date(year, month, i));
 
   useEffect(() => {
+    // fetchData-ն արդեն օգտագործում է քո api.js լոգիկան
     fetchData('services').then(data => { if (data) setServicesData(data); });
-    fetch("http://localhost:5000/api/profile", { credentials: "include" })
+
+    // Լոգիկայի ուղղում
+    fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => { setUser(data); setLoading(false); setContactForm({ name: data.name, phone: data.phoneNumber || "" }) })
       .catch(() => { setUser(null); setLoading(false); });
@@ -71,7 +77,8 @@ export default function Service() {
       alert("Լրացրեք բոլոր դաշտերը"); return;
     }
     try {
-      const response = await fetch("http://localhost:5000/api/book", {
+      // Լոգիկայի ուղղում
+      const response = await fetch(`${ENDPOINT}/api/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -96,7 +103,8 @@ export default function Service() {
   };
 
   const handleLogout = async () => {
-    await fetch("http://localhost:5000/api/logout", { method: "POST", credentials: "include" });
+    // Լոգիկայի ուղղում
+    await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     window.location.reload();
   };
@@ -119,7 +127,6 @@ export default function Service() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* --- HEADER --- */}
       <header className="relative bg-white border-b border-gray-100 z-[60]">
         <div className="flex justify-between items-center max-w-[1440px] mx-auto py-7 px-4">
           <Link href="/"><img src="/logo.svg" alt="Logo" width="170" /></Link>
@@ -150,7 +157,6 @@ export default function Service() {
         </div>
       </header>
 
-      {/* --- BURGER DRAWER --- */}
       <div className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] transition-opacity ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} onClick={() => setIsMenuOpen(false)} />
       <div className={`fixed top-0 right-0 h-full w-[350px] sm:w-[450px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
         <button className="absolute top-8 right-8 w-11 h-11 border border-gray-200 rounded-full flex items-center justify-center text-gray-400" onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
@@ -171,9 +177,7 @@ export default function Service() {
         </nav>
       </div>
 
-      {/* --- SERVICES CONTENT --- */}
       <section className="max-w-[1500px] mx-auto px-12 my-12">
-        {/* Category Swiper (նույնն է մնացել) */}
         <div className="relative flex items-center group">
           <button className="custom-prev-arrow absolute -left-12 z-10 flex items-center justify-center w-10 h-10 border border-gray-300 rounded-full bg-white hover:border-orange-500 transition-all shadow-sm">
             <ChevronLeft size={22} className="text-gray-600" />
@@ -194,7 +198,6 @@ export default function Service() {
           </button>
         </div>
 
-        {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 my-16">
           {activeServices.map((item) => (
             <div key={item.id} className="bg-white rounded-[1.8rem] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col border border-gray-100 group/card">
@@ -217,12 +220,10 @@ export default function Service() {
         </div>
       </section>
 
-      {/* --- SERVICE BOOKING MODALS (MULTI-STEP) --- */}
       {bookingStep > 0 && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-[40px] w-full max-w-[550px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
 
-            {/* Step 1: Content/Description */}
             {bookingStep === 1 && (
               <div className="p-10">
                 <div className="flex justify-between items-center mb-6">
@@ -237,7 +238,6 @@ export default function Service() {
               </div>
             )}
 
-            {/* Step 2: Single Day Calendar */}
             {bookingStep === 2 && (
               <div className="p-0">
                 <div className="p-8 border-b flex justify-between items-center">
@@ -273,7 +273,6 @@ export default function Service() {
               </div>
             )}
 
-            {/* Step 3: Contact Confirmation */}
             {bookingStep === 3 && (
               <div className="p-12 text-center">
                 <div className="flex justify-between items-center mb-10">
@@ -296,7 +295,6 @@ export default function Service() {
         </div>
       )}
 
-      {/* Exit Confirmation Modal */}
       {showExitConfirm && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md">
           <div className="bg-white p-10 rounded-[40px] shadow-2xl text-center max-w-sm w-full animate-in zoom-in-95">
@@ -309,7 +307,6 @@ export default function Service() {
         </div>
       )}
 
-      {/* AD & FOOTER (նույնն է մնացել) */}
       <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
         <div className="absolute inset-0 z-0">
           <Image src="/image/background/background.jpg" alt="Background" fill className="object-cover" priority />

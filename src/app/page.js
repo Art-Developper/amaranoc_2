@@ -15,6 +15,9 @@ import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT հեռախոսով թեստավորման համար
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
+
 export default function Home() {
   const pathName = usePathname();
   const router = useRouter();
@@ -50,13 +53,15 @@ export default function Home() {
     if (peopleCount > 1) params.append('people', peopleCount);
     selectedRegions.forEach(reg => params.append('region', reg));
 
+    // fetchData-ն օգտագործում է քո api.js լոգիկան, որտեղ արդեն կա բազային URL-ը
     fetchData(`houses?${params.toString()}`).then(data => {
       if (data) setHouses(data);
     });
   }, [searchQuery, selectedRegions, minPrice, maxPrice, peopleCount]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/profile", { credentials: "include" })
+    // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+    fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => { setUser(data); setLoading(false); })
       .catch(() => { setUser(null); setLoading(false); });
@@ -81,7 +86,8 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    await fetch("http://localhost:5000/api/logout", { method: "POST", credentials: "include" });
+    // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+    await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     window.location.reload();
   };
@@ -193,8 +199,8 @@ export default function Home() {
         </div>
 
         <div className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} onClick={() => setIsMenuOpen(false)} />
-        <div className={`fixed top-0 right-0 h-full w-[350px] sm:w-[450px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ease-in-out ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <button className="absolute top-8 right-8 w-11 h-11 border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all" onClick={() => setIsMenuOpen(false)}>
+        <div className={`fixed top-0 right-0 h-full w-[320px] sm:w-[400px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ease-in-out ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <button className="absolute top-8 right-8 w-11 h-11 border border-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all" onClick={() => setIsMenuOpen(false)}>
             <X size={24} />
           </button>
           <nav className="flex flex-col gap-10 mt-24">
@@ -295,7 +301,6 @@ export default function Home() {
             <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Մարդկանց թույլատրելի քանակը գիշերակացով</h3>
             <div className="flex items-center gap-4">
               <button
-
                 className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
               ><Minus size={18} /></button>
               <input type="text" className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" />

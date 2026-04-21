@@ -10,6 +10,9 @@ import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { fetchData } from "@/lib/api";
 
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
+
 export default function Sales() {
   const pathName = usePathname();
   const router = useRouter();
@@ -35,14 +38,15 @@ export default function Sales() {
 
   // 1. Ստանում ենք զեղչերի տվյալները սերվերից
   useEffect(() => {
+    // fetchData-ն օգտագործում է քո api.js-ի լոգիկան
     fetchData('sales').then(data => {
       if (data) setSalesData(data);
     });
   }, []);
 
-  // 2. Պրոֆիլի ստուգում (սեսիայի համար)
+  // 2. Լոգիկայի ուղղում՝ պրոֆիլի ստուգում (localhost -> ENDPOINT)
   useEffect(() => {
-    fetch("http://localhost:5000/api/profile", { credentials: "include" })
+    fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => {
         setUser(data);
@@ -67,13 +71,14 @@ export default function Sales() {
     }
   };
 
+  // Լոգիկայի ուղղում՝ logout (localhost -> ENDPOINT)
   const handleLogout = async () => {
-    await fetch("http://localhost:5000/api/logout", { method: "POST", credentials: "include" });
+    await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     window.location.reload();
   };
 
-  // Նվեր քարտի պատվերի ուղարկում
+  // Լոգիկայի ուղղում՝ Նվեր քարտի պատվեր (localhost -> ENDPOINT)
   const handleOrderSubmit = async () => {
     if (!user) {
       router.push("/login");
@@ -85,7 +90,7 @@ export default function Sales() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/book", {
+      const response = await fetch(`${ENDPOINT}/api/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,7 +102,7 @@ export default function Sales() {
           totalPrice: parseInt(selectedPrice.replace(/[^0-9]/g, '')),
           contactInfo: {
             name: user.name,
-            email: user.email, // Կարևոր. օգտագործում ենք լոգին եղած մարդու մեյլը
+            email: user.email,
             phone: formData.phoneNumber
           }
         }),
@@ -134,7 +139,6 @@ export default function Sales() {
           <div className="flex gap-5 items-center">
             <Globe className="w-5 h-5 cursor-pointer text-gray-700 hover:text-orange-500" />
 
-            {/* Desktop Auth Status */}
             <div className="hidden min-[1321px]:flex items-center">
               {loading ? null : user ? (
                 <div className="flex items-center gap-4">
@@ -146,7 +150,6 @@ export default function Sales() {
               )}
             </div>
 
-            {/* Search Input */}
             <div className="relative hidden sm:block">
               <input
                 type="text"
@@ -273,7 +276,7 @@ export default function Sales() {
         </div>
       </div>
 
-      {/* --- ԱՆՓՈՓՈԽ AD SECTION --- */}
+      {/* --- AD SECTION --- */}
       <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
         <div className="absolute inset-0 z-0">
           <Image src="/image/background/background.jpg" alt="Background" fill className="object-cover" priority />
@@ -295,7 +298,7 @@ export default function Sales() {
         </div>
       </div>
 
-      {/* --- ԱՆՓՈՓՈԽ FOOTER --- */}
+      {/* --- FOOTER --- */}
       <div className=" bg-[#101623ff] text-white">
         <div className="flex justify-center items-center">
           <h1 className="text-3xl my-4 font-light tracking-widest">ԿՈՆՏԱԿՏՆԵՐ</h1>

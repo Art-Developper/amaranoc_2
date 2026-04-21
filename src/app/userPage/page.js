@@ -9,6 +9,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+// Կենտրոնացված հասցե՝ վերցված .env.local-ից կամ քո IPv4-ից
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
+
 export default function UserPage() {
     const pathName = usePathname();
     const router = useRouter();
@@ -32,7 +35,8 @@ export default function UserPage() {
     }, []);
 
     const fetchProfile = () => {
-        fetch("http://localhost:5000/api/profile", { credentials: "include" })
+        // Ուղղված է՝ ավելացվել է /api
+        fetch(`${ENDPOINT}/profile`, { credentials: "include" })
             .then(res => {
                 if (!res.ok) throw new Error();
                 return res.json();
@@ -56,7 +60,8 @@ export default function UserPage() {
     };
 
     const handleLogout = async () => {
-        await fetch("http://localhost:5000/api/logout", {
+        // Ուղղված է՝ ավելացվել է /api
+        await fetch(`${ENDPOINT}/logout`, {
             method: "POST",
             credentials: "include"
         });
@@ -65,7 +70,8 @@ export default function UserPage() {
     };
 
     const handleDelete = async () => {
-        const res = await fetch("http://localhost:5000/api/user/delete", {
+        // Ուղղված է՝ ավելացվել է /api
+        const res = await fetch(`${ENDPOINT}/user/delete`, {
             method: "DELETE",
             credentials: "include"
         });
@@ -77,7 +83,8 @@ export default function UserPage() {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        const res = await fetch("http://localhost:5000/api/user/update", {
+        // Ուղղված է՝ ավելացվել է /api
+        const res = await fetch(`${ENDPOINT}/user/update`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(formData),
@@ -170,7 +177,7 @@ export default function UserPage() {
                 <div className="bg-white border border-gray-100 shadow-sm rounded-[40px] p-8 flex flex-wrap items-center justify-between gap-8">
                     <div className="flex items-center gap-6">
                         <div className="relative">
-                            <div className="w-20 h-20 bg-[#689f38] rounded-full flex items-center justify-center text-white text-3xl font-black uppercase shadow-lg border-4 border-white">
+                            <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center text-white text-3xl font-black uppercase shadow-lg border-4 border-white">
                                 {user?.name?.charAt(0)}
                             </div>
                             <button onClick={() => setActiveModal('edit')} className="absolute -bottom-1 -right-1 bg-white border border-gray-200 p-2 rounded-full shadow-md hover:bg-orange-50 transition group">
@@ -193,13 +200,13 @@ export default function UserPage() {
                     <div className="flex items-center gap-4">
                         <Link
                             href="/chat"
-                            className="px-8 py-3 bg-[#1d2331] text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-black transition shadow-xl shadow-gray-200 flex items-center gap-3"
+                            className="px-8 py-3 bg-[#1d2331] text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-black transition shadow-xl flex items-center gap-3"
                         >
                             <Send size={16} /> Իմ չատերը
                         </Link>
                         <button onClick={() => setActiveModal('edit')} className="p-3.5 border border-gray-200 rounded-full hover:bg-gray-50 transition text-gray-400 hover:text-orange-500"><Pencil size={20} /></button>
-                        <button onClick={() => setActiveModal('delete')} className="px-8 py-3 border border-gray-200 rounded-full text-gray-800 font-black text-xs uppercase tracking-widest hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition">Ջնջել պրոֆիլը</button>
-                        <button onClick={() => setActiveModal('logout')} className="px-8 py-3 bg-[#1d2331] text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-black transition shadow-xl shadow-gray-200 flex items-center gap-3">
+                        <button onClick={() => setActiveModal('delete')} className="px-8 py-3 border border-gray-200 rounded-full text-gray-800 font-black text-xs uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition">Ջնջել պրոֆիլը</button>
+                        <button onClick={() => setActiveModal('logout')} className="px-8 py-3 bg-[#1d2331] text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-black transition flex items-center gap-3">
                             <LogOut size={16} /> Ելք
                         </button>
                     </div>
@@ -215,104 +222,46 @@ export default function UserPage() {
 
                     {user?.bookings?.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {user.bookings.map((booking) => {
-
-                                if (booking.type === "house") {
-                                    return (
-                                        <div key={booking.id} className="bg-white border border-gray-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group">
-                                            <div className="relative h-60 overflow-hidden">
-                                                <img src={booking.houseDetails?.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="House" />
-                                                <div className="absolute top-6 left-6 bg-[#ff9d43] text-white px-5 py-2 rounded-[20px] text-[10px] font-black shadow-xl uppercase tracking-widest">ՏՈՒՆ</div>
-                                            </div>
-                                            <div className="p-8">
-                                                <h4 className="text-2xl font-black text-gray-800 mb-5 uppercase">{booking.houseDetails?.location}</h4>
-                                                <div className="space-y-3 mb-6 font-bold text-gray-500 text-sm">
-                                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
-                                                        <Calendar className="text-orange-500" size={18} />
-                                                        <span>{new Date(booking.startDate).toLocaleDateString("hy-AM")} - {booking.endDate ? new Date(booking.endDate).toLocaleDateString("hy-AM") : "1 օր"}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
-                                                        <Users className="text-orange-500" size={18} />
-                                                        <span>{(booking.guests?.adults || 0) + (booking.guests?.kids || 0)} անձ</span>
-                                                    </div>
-                                                </div>
-                                                <div className="border-t border-dashed pt-5 flex justify-between items-center">
-                                                    <span className="text-gray-400 font-black uppercase text-[10px]">Ընդհանուր արժեք</span>
-                                                    <span className="text-2xl font-black text-gray-900">{booking.totalPrice?.toLocaleString()} ֏</span>
-                                                </div>
+                            {user.bookings.map((booking) => (
+                                <div key={booking.id} className="bg-white border border-gray-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group">
+                                    <div className="relative h-60 overflow-hidden">
+                                        <img src={booking.houseDetails?.image || booking.details?.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Booking" />
+                                        <div className="absolute top-6 left-6 bg-[#ff9d43] text-white px-5 py-2 rounded-[20px] text-[10px] font-black shadow-xl uppercase tracking-widest">
+                                            {booking.type === 'house' ? 'ՏՈՒՆ' : booking.type === 'service' ? 'ԾԱՌԱՅՈՒԹՅՈՒՆ' : 'ՆՎԵՐ ՔԱՐՏ'}
+                                        </div>
+                                    </div>
+                                    <div className="p-8">
+                                        <h4 className="text-2xl font-black text-gray-800 mb-5 uppercase">
+                                            {booking.houseDetails?.location || booking.details?.title || "Ամրագրում"}
+                                        </h4>
+                                        <div className="space-y-3 mb-6 font-bold text-gray-500 text-sm">
+                                            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
+                                                <Calendar className="text-orange-500" size={18} />
+                                                <span>{booking.startDate ? new Date(booking.startDate).toLocaleDateString("hy-AM") : "Ամսաթիվ նշված չէ"}</span>
                                             </div>
                                         </div>
-                                    );
-                                }
-
-                                if (booking.type === "service") {
-                                    return (
-                                        <div key={booking.id} className="bg-white border border-gray-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group">
-                                            <div className="relative h-60 overflow-hidden">
-                                                <img src={booking.details?.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Service" />
-                                                <div className="absolute top-6 left-6 bg-blue-500 text-white px-5 py-2 rounded-[20px] text-[10px] font-black shadow-xl uppercase tracking-widest">ԾԱՌԱՅՈՒԹՅՈՒՆ</div>
-                                            </div>
-                                            <div className="p-8">
-                                                <h4 className="text-2xl font-black text-gray-800 mb-5 uppercase">{booking.details?.title}</h4>
-                                                <div className="space-y-3 mb-6 font-bold text-gray-500 text-sm">
-                                                    <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl">
-                                                        <Calendar className="text-blue-500" size={18} />
-                                                        <span>Ամսաթիվ՝ {new Date(booking.details?.date).toLocaleDateString("hy-AM")}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="border-t border-dashed pt-5 flex justify-between items-center">
-                                                    <span className="text-gray-400 font-black uppercase text-[10px]">Ծառայության գին</span>
-                                                    <span className="text-2xl font-black text-gray-900">{booking.totalPrice?.toLocaleString()} ֏</span>
-                                                </div>
-                                            </div>
+                                        <div className="border-t border-dashed pt-5 flex justify-between items-center">
+                                            <span className="text-gray-400 font-black uppercase text-[10px]">Ընդհանուր արժեք</span>
+                                            <span className="text-2xl font-black text-gray-900">{booking.totalPrice?.toLocaleString()} ֏</span>
                                         </div>
-                                    );
-                                }
-
-                                if (booking.type === "giftcard") {
-                                    return (
-                                        <div key={booking.id} className="bg-white border-2 border-orange-100 rounded-[45px] overflow-hidden shadow-sm hover:shadow-2xl transition-all p-10 flex flex-col justify-between group relative">
-                                            <div className="absolute -top-4 -right-4 bg-orange-500/10 w-32 h-32 rounded-full blur-3xl"></div>
-                                            <div>
-                                                <div className="flex justify-between items-center mb-8">
-                                                    <div className="bg-[#ff9d43] text-white px-5 py-2 rounded-[20px] text-[10px] font-black uppercase tracking-widest shadow-lg shadow-orange-200">ՆՎԵՐ ՔԱՐՏ</div>
-                                                    <Tag className="text-orange-400 rotate-90" size={28} />
-                                                </div>
-                                                <div className="mb-8">
-                                                    <span className="text-gray-400 font-black uppercase text-xs block mb-2 tracking-widest">Արժեթուղթ</span>
-                                                    <h4 className="text-4xl font-black text-gray-900 italic tracking-tighter">{booking.details?.giftCardAmount}</h4>
-                                                </div>
-                                                <div className="space-y-4 font-bold text-gray-600">
-                                                    <div className="flex items-center gap-3 bg-orange-50/50 p-3 rounded-2xl border border-orange-100/50">
-                                                        <User size={18} className="text-orange-500" />
-                                                        <span>Ստացող՝ {booking.details?.forWhom}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="mt-10 border-t border-dashed pt-6 flex justify-between items-center">
-                                                <span className="text-gray-400 font-black uppercase text-[10px]">Գնված է</span>
-                                                <span className="text-2xl font-black text-[#1d2331]">{booking.totalPrice?.toLocaleString()} ֏</span>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
-                                return null;
-                            })}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <div className="bg-gray-50 border-4 border-dashed border-gray-100 rounded-[50px] p-24 text-center flex flex-col items-center gap-8">
                             <div className="bg-white p-8 rounded-full shadow-lg text-gray-100"><Search size={64} /></div>
-                            <p className="text-gray-400 font-black text-2xl italic uppercase tracking-tighter">Դուք դեռևս չունեք ամրագրված տներ</p>
-                            <Link href="/" className="bg-[#ff9d43] text-white px-12 py-4 rounded-full font-black uppercase tracking-widest text-sm">Բացահայտել տները</Link>
+                            <p className="text-gray-400 font-black text-2xl italic uppercase tracking-tighter">Դուք դեռևս չունեք ամրագրումներ</p>
+                            <Link href="/" className="bg-[#ff9d43] text-white px-12 py-4 rounded-full font-black uppercase tracking-widest text-sm">Բացահայտել</Link>
                         </div>
                     )}
                 </div>
             </div >
 
+            {/* Modals */}
             {activeModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-                    <div className="bg-white rounded-[45px] p-12 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-300 border border-gray-100">
+                    <div className="bg-white rounded-[45px] p-12 max-w-md w-full shadow-2xl relative border border-gray-100">
                         <button onClick={() => setActiveModal(null)} className="absolute top-8 right-8 text-gray-300 hover:text-black transition-colors"><X size={32} /></button>
 
                         {activeModal === 'edit' && (
@@ -321,14 +270,14 @@ export default function UserPage() {
                                 <div className="space-y-5">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Անուն Ազգանուն</label>
-                                        <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full border-2 border-gray-100 rounded-[25px] p-5 outline-none focus:border-orange-400 font-bold text-lg transition-all" required />
+                                        <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full border-2 border-gray-100 rounded-[25px] p-5 outline-none focus:border-orange-400 font-bold text-lg" required />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Հեռախոսահամար</label>
-                                        <input type="text" value={formData.phoneNumber} onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} className="w-full border-2 border-gray-100 rounded-[25px] p-5 outline-none focus:border-orange-400 font-bold text-lg transition-all" />
+                                        <input type="text" value={formData.phoneNumber} onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} className="w-full border-2 border-gray-100 rounded-[25px] p-5 outline-none focus:border-orange-400 font-bold text-lg" />
                                     </div>
                                 </div>
-                                <button type="submit" className="bg-[#ff9d43] text-white py-5 rounded-full font-black text-xl hover:bg-orange-500 shadow-2xl shadow-orange-100 transition-all uppercase tracking-widest">ՊԱՀՊԱՆԵԼ</button>
+                                <button type="submit" className="bg-orange-500 text-white py-5 rounded-full font-black text-xl hover:bg-black transition-all uppercase tracking-widest">ՊԱՀՊԱՆԵԼ</button>
                             </form>
                         )}
 
@@ -340,7 +289,7 @@ export default function UserPage() {
                                 <h3 className="text-3xl font-black mb-10 text-gray-800 uppercase tracking-tighter italic">Դուրս գալ հաշվի՞ց</h3>
                                 <div className="flex gap-4">
                                     <button onClick={() => setActiveModal(null)} className="flex-1 py-5 border-2 border-gray-100 rounded-[25px] font-black text-gray-400 hover:bg-gray-50 transition uppercase tracking-widest text-xs">ՈՉ</button>
-                                    <button onClick={handleLogout} className="flex-1 py-5 bg-[#1d2331] text-white rounded-[25px] font-black shadow-2xl shadow-gray-200 hover:bg-black transition uppercase tracking-widest text-xs">ԱՅՈ</button>
+                                    <button onClick={handleLogout} className="flex-1 py-5 bg-[#1d2331] text-white rounded-[25px] font-black shadow-2xl hover:bg-black transition uppercase tracking-widest text-xs">ԱՅՈ</button>
                                 </div>
                             </div>
                         )}
@@ -354,48 +303,22 @@ export default function UserPage() {
                                 <p className="text-gray-400 font-bold text-sm mb-10 leading-relaxed">Այս գործողությունը անդառնալի է և ձեր բոլոր տվյալները կջնջվեն:</p>
                                 <div className="flex gap-4">
                                     <button onClick={() => setActiveModal(null)} className="flex-1 py-5 border-2 border-gray-100 rounded-[25px] font-black text-gray-400 hover:bg-gray-50 transition uppercase tracking-widest text-xs">ՈՉ</button>
-                                    <button onClick={handleDelete} className="flex-1 py-5 bg-red-600 text-white rounded-[25px] font-black shadow-2xl shadow-red-100 hover:bg-red-700 transition uppercase tracking-widest text-xs">ՋՆՋԵԼ</button>
+                                    <button onClick={handleDelete} className="flex-1 py-5 bg-red-600 text-white rounded-[25px] font-black shadow-2xl hover:bg-red-700 transition uppercase tracking-widest text-xs">ՋՆՋԵԼ</button>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
-            )
-            }
-
-            <div className="relative text-white py-20 mt-20 overflow-hidden min-h-[400px]">
-                <div className="absolute inset-0 z-0">
-                    <Image src="/image/background/background.jpg" alt="Background" fill className="object-cover" priority />
-                    <div className="absolute inset-0 bg-black/60"></div>
-                </div>
-                <div className="relative z-10 max-w-6xl mx-auto border border-gray-700 rounded-3xl p-10 text-center backdrop-blur-sm">
-                    <div className="flex justify-center items-center gap-8 mb-10">
-                        <div className="w-10 md:w-40 h-px bg-white/30"></div>
-                        <h2 className="text-2xl md:text-3xl font-light uppercase tracking-wider">Տեղադրել հայտարարություն</h2>
-                        <div className="w-10 md:w-40 h-px bg-white/30"></div>
-                    </div>
-                    <p className="mb-10 text-gray-300">Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
-                    <div className="flex flex-wrap justify-center gap-4">
-                        <input type="text" placeholder="Անուն Ազգանուն" className="bg-white/10 border border-gray-500 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
-                        <input type="tel" placeholder="Հեռախոսահամար" className="bg-white/10 border border-gray-500 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
-                        <input type="email" placeholder="Էլ․ Հասցե" className="bg-white/10 border border-gray-500 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
-                        <button className="bg-orange-400 text-black px-10 py-3 rounded-2xl font-bold hover:bg-orange-500 transition-all">Ուղարկել</button>
-                    </div>
-                </div>
-            </div>
+            )}
 
             <footer className="bg-[#101623] text-white pt-10">
-                <h2 className="text-center text-3xl mb-10 tracking-widest font-light uppercase">Կոնտակտներ</h2>
-                <div className="flex flex-wrap justify-center gap-10 px-4 mb-10">
-                    <div className="flex items-center gap-2"><Phone size={20} className="text-orange-500" /> <span className="text-sm">041-611-611 / 044-611-611</span></div>
-                    <div className="flex items-center gap-2 uppercase tracking-wide"><Mail size={20} className="text-orange-500" /> <span className="text-sm">amaranoc.info@gmail.com</span></div>
-                    <div className="flex items-center gap-2 uppercase tracking-wide"><Instagram size={20} className="text-orange-500" /> <span className="text-sm font-medium">AMARANOC.AM</span></div>
-                    <div className="flex items-center gap-2 uppercase tracking-wide"><Facebook size={20} className="text-orange-500" /> <span className="text-sm font-medium">AMARANOC.AM</span></div>
-                    <div className="flex items-center gap-2 uppercase tracking-wide"><MapPin size={20} className="text-orange-500" /> <span className="text-sm">Թումանյան 5</span></div>
-                </div>
-                <div className="text-center text-gray-500 text-xs pb-10 space-y-2">
-                    <p className="underline cursor-pointer hover:text-orange-500 transition">Գաղտնիության քաղաքականություն</p>
-                    <p>Ամառանոց ՍՊԸ | Amaranoc LLC | Амараноц OOO</p>
+                <div className="max-w-6xl mx-auto px-4 text-center">
+                    <h2 className="text-3xl mb-10 tracking-widest font-light uppercase">Կոնտակտներ</h2>
+                    <div className="flex flex-wrap justify-center gap-10 mb-10">
+                        <div className="flex items-center gap-2"><Phone size={20} className="text-orange-500" /> <span className="text-sm">041-611-611</span></div>
+                        <div className="flex items-center gap-2"><Mail size={20} className="text-orange-500" /> <span className="text-sm">amaranoc.info@gmail.com</span></div>
+                        <div className="flex items-center gap-2"><MapPin size={20} className="text-orange-500" /> <span className="text-sm">Թումանյան 5</span></div>
+                    </div>
                 </div>
                 <div className="w-full relative h-40">
                     <Image src="/image/footer-background.webp" alt="footer" fill className="object-cover opacity-40" />

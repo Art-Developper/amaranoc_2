@@ -10,6 +10,9 @@ import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { fetchData } from "@/lib/api.js"
 
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
+
 export default function About() {
   const pathName = usePathname();
   const router = useRouter();
@@ -23,6 +26,7 @@ export default function About() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
+    // fetchData-ն արդեն օգտագործում է քո api.js-ի լոգիկան
     fetchData('about').then(data => {
       if (data) {
         setSectionData(data);
@@ -31,7 +35,8 @@ export default function About() {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/profile", {
+    // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+    fetch(`${ENDPOINT}/api/profile`, {
       credentials: "include"
     })
       .then(res => {
@@ -55,7 +60,8 @@ export default function About() {
   };
 
   const handleLogout = async () => {
-    await fetch("http://localhost:5000/api/logout", {
+    // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+    await fetch(`${ENDPOINT}/api/logout`, {
       method: "POST",
       credentials: "include"
     });

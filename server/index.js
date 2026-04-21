@@ -18,7 +18,10 @@ let app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: [
+            "http://localhost:3000",
+            "http://192.168.0.46:3000"
+        ],
         credentials: true
     }
 });
@@ -76,7 +79,10 @@ io.on("connection", (socket) => {
 
 
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: [
+        "http://localhost:3000",
+        "http://192.168.0.46:3000"    
+    ],
     credentials: true
 }));
 app.use(express.json());
@@ -194,8 +200,8 @@ app.post("/api/message", async (req, res) => {
             });
 
         res.json(newMessage);
-    } catch (error) { 
-        res.status(500).send(error); 
+    } catch (error) {
+        res.status(500).send(error);
     }
 });
 

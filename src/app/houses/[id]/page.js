@@ -5,7 +5,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { fetchData } from "@/lib/api.js";
 import {
     MapPin, X, CheckCircle2, Home, Maximize, Users, Bed, Bath, Waves, Tag,
-    User, Globe, Search, Menu, ChevronLeft, ChevronRight, LogOut, Phone, Mail, Instagram, Facebook,Heart
+    User, Globe, Search, Menu, ChevronLeft, ChevronRight, LogOut, Phone, Mail, Instagram, Facebook, Heart
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,6 +14,9 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
 
 export default function HouseDetails() {
     const { id } = useParams();
@@ -38,7 +41,6 @@ export default function HouseDetails() {
     const [viewDate, setViewDate] = useState(new Date());
     const monthNames = ["ՀՈՒՆՎԱՐ", "ՓԵՏՐՎԱՐ", "ՄԱՐՏ", "ԱՊՐԻԼ", "ՄԱՅԻՍ", "ՀՈՒՆԻՍ", "ՀՈՒԼԻՍ", "ՕԳՈՍՏՈՍ", "ՍԵՊՏԵՄԲԵՐ", "ՀՈԿՏԵՄԲԵՐ", "ՆՈՅԵՄԲԵՐ", "ԴԵԿՏԵՄԲԵՐ"];
 
-    
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
     const firstDayOfMonth = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -53,6 +55,7 @@ export default function HouseDetails() {
     }
 
     useEffect(() => {
+        // fetchData-ն օգտագործում է քո api.js-ի լոգիկան
         fetchData(`houses/${id}`).then(data => setHouse(data));
         fetchData(`houses`).then(data => {
             if (data) setSimilarHouses(data.filter(h => h.id !== parseInt(id)).slice(0, 3));
@@ -60,14 +63,16 @@ export default function HouseDetails() {
     }, [id]);
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/profile", { credentials: "include" })
+        // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+        fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
             .then(res => res.ok ? res.json() : Promise.reject())
             .then(data => { setUser(data); setLoading(false); })
             .catch(() => { setUser(null); setLoading(false); });
     }, []);
 
     const handleLogout = async () => {
-        await fetch("http://localhost:5000/api/logout", { method: "POST", credentials: "include" });
+        // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+        await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
         setUser(null);
         window.location.reload();
     };
@@ -106,7 +111,7 @@ export default function HouseDetails() {
         if (extraGuests > 0) dailyPrice += extraGuests * 5000;
         return days * dailyPrice;
     };
-    const renderValue = (value, unit = "") => value ? `${value} ${unit}` : "չկա ինֆորմացիա";    
+    const renderValue = (value, unit = "") => value ? `${value} ${unit}` : "չկա ինֆորմացիա";
 
     const handleStartBooking = () => {
         if (!user) {
@@ -122,7 +127,8 @@ export default function HouseDetails() {
             return;
         }
         try {
-            const response = await fetch("http://localhost:5000/api/book", {
+            // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+            const response = await fetch(`${ENDPOINT}/api/book`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -327,6 +333,7 @@ export default function HouseDetails() {
                 </div>
             </main>
 
+            {/* Modals ... (Պահպանված է նույնությամբ) */}
             {bookingStep === 1 && (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-[45px] w-full max-w-[550px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">

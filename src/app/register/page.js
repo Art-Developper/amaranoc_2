@@ -5,6 +5,9 @@ import { User, Globe, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
+
 export default function RegisterPage() {
     const [name, setName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -15,10 +18,11 @@ export default function RegisterPage() {
     const pathName = usePathname();
 
     const handleSubmit = async (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
 
         try {
-            const response = await fetch("http://localhost:5000/api/register", { // Համոզվեք, որ պորտը ճիշտ է
+            // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+            const response = await fetch(`${ENDPOINT}/api/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, phoneNumber, email, password }),
@@ -78,7 +82,7 @@ export default function RegisterPage() {
                                 required
                             />
                             <input
-                                type="text" // Փոխեցի text, որ phoneNumber-ը ճիշտ գրվի
+                                type="text"
                                 placeholder="Հեռախոսահամար"
                                 value={phoneNumber}
                                 onChange={(e) => setPhoneNumber(e.target.value)}

@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useRef } from "react"
 import {
     Search, Plus, Send, Mic, Phone, Video, Trash2,
-    X, CheckCircle2, ChevronLeft, MicOff, PhoneOff, Home, User as UserIcon
+    X, CheckCircle2, ChevronLeft, MicOff, PhoneOff, Home
 } from "lucide-react";
 import { io } from "socket.io-client";
 import Peer from "peerjs";
 import { useRouter } from "next/navigation";
 
-const ENDPOINT = "http://localhost:5000";
+// Օգտագործում ենք .env-ի հասցեն կամ քո IPv4-ը
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
 
 export default function ChatPage() {
     const router = useRouter();
@@ -45,7 +46,6 @@ export default function ChatPage() {
     const [groupName, setGroupName] = useState("");
     const [selectedUsersForGroup, setSelectedUsersForGroup] = useState([]);
 
-    // Ավտոմատ սքրոլ ներքև
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -56,16 +56,17 @@ export default function ChatPage() {
 
     // 1. Մուտքի և Socket-ի նախնական կարգավորում
     useEffect(() => {
-        fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
+        // Կարևոր է օգտագործել ENDPOINT փոփոխականը
+        fetch(`${ENDPOINT}/profile`, { credentials: "include" })
             .then(res => res.ok ? res.json() : Promise.reject())
             .then(data => {
                 setUser(data);
 
-                // Միացնում ենք Socket-ը
-                socket.current = io(ENDPOINT);
+                // Միացնում ենք Socket-ը դինամիկ հասցեով
+                socket.current = io(ENDPOINT.replace("/api", ""));
                 socket.current.emit("setup", data);
 
-                // Միացնում ենք PeerJS-ը զանգերի համար
+                // Միացնում ենք PeerJS-ը
                 const peer = new Peer(data._id);
                 peerInstance.current = peer;
 
@@ -79,52 +80,56 @@ export default function ChatPage() {
                 fetchChats();
                 fetchAllUsers();
             })
-            .catch(() => router.push("/login"));
+            .catch(() => {
+                console.error("Auth failed, redirecting...");
+                router.push("/login");
+            });
 
         return () => {
             if (socket.current) socket.current.disconnect();
         };
     }, []);
 
-    // 2. Լսել Socket հաղորդագրությունները (Real-time ֆիքս)
+    // 2. Real-time հաղորդագրությունների լսում
     useEffect(() => {
         if (!socket.current) return;
 
         const handleMessageReceived = (newMessageReceived) => {
-            // Եթե նամակը պատկանում է հենց այս պահին բացված չատին
             if (selectedChat && selectedChat._id === newMessageReceived.chat._id) {
                 setMessages((prev) => [...prev, newMessageReceived]);
             }
-            // Թարմացնել չատերի ցուցակը (վերջին նամակը տեսնելու համար)
             fetchChats();
         };
 
         socket.current.on("message received", handleMessageReceived);
+        return () => socket.current.off("message received", handleMessageReceived);
+    }, [selectedChat]);
 
-        return () => {
-            socket.current.off("message received", handleMessageReceived);
-        };
-    }, [selectedChat]); // Կարևոր է, որ selectedChat-ը լինի այստեղ
-
-    // --- ՖՈՒՆԿՑԻԱՆԵՐ ---
+    // --- ՖՈՒՆԿՑԻԱՆԵՐ (Բոլոր fetch-երը ուղղված են) ---
 
     const fetchChats = async () => {
-        const res = await fetch(`${ENDPOINT}/api/chat`, { credentials: "include" });
-        const data = await res.json();
-        setChats(data);
+        const res = await fetch(`${ENDPOINT}/chat`, { credentials: "include" });
+        if (res.ok) {
+            const data = await res.json();
+            setChats(data);
+        }
     };
 
     const fetchAllUsers = async () => {
-        const res = await fetch(`${ENDPOINT}/api/users`, { credentials: "include" });
-        const data = await res.json();
-        setAllUsers(data);
+        const res = await fetch(`${ENDPOINT}/users`, { credentials: "include" });
+        if (res.ok) {
+            const data = await res.json();
+            setAllUsers(data);
+        }
     };
 
     const fetchMessages = async () => {
         if (!selectedChat) return;
-        const res = await fetch(`${ENDPOINT}/api/message/${selectedChat._id}`, { credentials: "include" });
-        const data = await res.json();
-        setMessages(data);
+        const res = await fetch(`${ENDPOINT}/message/${selectedChat._id}`, { credentials: "include" });
+        if (res.ok) {
+            const data = await res.json();
+            setMessages(data);
+        }
     };
 
     useEffect(() => {
@@ -138,7 +143,7 @@ export default function ChatPage() {
         if (!newMessage.trim()) return;
         const messageData = { content: newMessage, chatId: selectedChat._id };
 
-        const res = await fetch(`${ENDPOINT}/api/message`, {
+        const res = await fetch(`${ENDPOINT}/amessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(messageData),
@@ -152,7 +157,7 @@ export default function ChatPage() {
     };
 
     const accessChat = async (userId) => {
-        const res = await fetch(`${ENDPOINT}/api/chat`, {
+        const res = await fetch(`${ENDPOINT}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId }),
@@ -168,7 +173,7 @@ export default function ChatPage() {
             alert("Մուտքագրեք անուն և ընտրեք առնվազն 2 հոգի");
             return;
         }
-        const res = await fetch(`${ENDPOINT}/api/chat/group`, {
+        const res = await fetch(`${ENDPOINT}/chat/group`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: groupName, users: selectedUsersForGroup }),
@@ -183,34 +188,38 @@ export default function ChatPage() {
 
     const toggleRecording = async () => {
         if (!recording) {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream);
-            let chunks = [];
-            recorder.ondataavailable = (e) => chunks.push(e.data);
-            recorder.onstop = async () => {
-                const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                reader.onloadend = async () => {
-                    const res = await fetch(`${ENDPOINT}/api/message`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            content: "🎤 Voice Message",
-                            chatId: selectedChat._id,
-                            messageType: "voice",
-                            fileUrl: reader.result
-                        }),
-                        credentials: "include"
-                    });
-                    const data = await res.json();
-                    setMessages([...messages, data]);
-                    socket.current.emit("new message", data);
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const recorder = new MediaRecorder(stream);
+                let chunks = [];
+                recorder.ondataavailable = (e) => chunks.push(e.data);
+                recorder.onstop = async () => {
+                    const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = async () => {
+                        const res = await fetch(`${ENDPOINT}/api/message`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                content: "🎤 Voice Message",
+                                chatId: selectedChat._id,
+                                messageType: "voice",
+                                fileUrl: reader.result
+                            }),
+                            credentials: "include"
+                        });
+                        const data = await res.json();
+                        setMessages([...messages, data]);
+                        socket.current.emit("new message", data);
+                    };
                 };
-            };
-            recorder.start();
-            setMediaRecorder(recorder);
-            setRecording(true);
+                recorder.start();
+                setMediaRecorder(recorder);
+                setRecording(true);
+            } catch (err) {
+                alert("Microphone access denied");
+            }
         } else {
             mediaRecorder.stop();
             setRecording(false);
@@ -219,18 +228,11 @@ export default function ChatPage() {
 
     const callUser = async (type) => {
         try {
-            // Ստուգում ենք՝ արդյոք բրաուզերը աջակցում է մեդիա սարքերին
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert("Ձեր բրաուզերը չի աջակցում զանգերի ֆունկցիան:");
+            if (!navigator.mediaDevices?.getUserMedia) {
+                alert("Calls not supported on this browser/device");
                 return;
             }
-
-            const constraints = {
-                audio: true,
-                video: type === 'video'
-            };
-
-            // Այստեղ բրաուզերը կհարցնի թույլտվություն (2-րդ կետի պատասխանը)
+            const constraints = { audio: true, video: type === 'video' };
             const localStream = await navigator.mediaDevices.getUserMedia(constraints);
 
             setCallModal(true);
@@ -244,59 +246,40 @@ export default function ChatPage() {
                 if (userVideo.current) userVideo.current.srcObject = remoteStream;
             });
             setCallAccepted(true);
-
         } catch (err) {
-            // 3-րդ կետ՝ Catch-ը բռնում է սխալը, եթե սարքը չկա
-            if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-                alert("Սխալ. Ձեր համակարգչի վրա չի գտնվել միկրոֆոն կամ տեսախցիկ:");
-            } else if (err.name === "NotAllowedError") {
-                alert("Դուք մերժել եք տեսախցիկի մուտքը։ Խնդրում ենք թույլատրել բրաուզերի կարգավորումներից:");
-            } else {
-                alert("Տեղի է ունեցել անհայտ սխալ զանգի ժամանակ:");
-            }
+            alert("Could not access camera/microphone");
             console.error(err);
         }
     };
 
     const answerCall = async () => {
         try {
-            // Փորձում ենք միացնել սարքերը պատասխանելու համար
-            const localStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
-
+            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             setStream(localStream);
             if (myVideo.current) myVideo.current.srcObject = localStream;
             callerSignal.answer(localStream);
-
             callerSignal.on('stream', (remoteStream) => {
                 if (userVideo.current) userVideo.current.srcObject = remoteStream;
             });
-
             setCallAccepted(true);
             setReceivingCall(false);
         } catch (err) {
-            // Եթե 1-ին համակարգիչը սարք չունի, կմտնի այստեղ
-            alert("Դուք չեք կարող պատասխանել զանգին, քանի որ չունեք միկրոֆոն կամ տեսախցիկ:");
+            alert("Hardware error");
             setCallModal(false);
             setReceivingCall(false);
-            // Կարող ես նաև անջատել զանգը, որ մյուս կողմը հասկանա
-            window.location.reload();
         }
     };
 
     const clearChat = async () => {
         if (window.confirm("Արդյո՞ք ուզում եք մաքրել ամբողջ պատմությունը")) {
-            await fetch(`${ENDPOINT}/api/message/clear/${selectedChat._id}`, { method: "DELETE", credentials: "include" });
+            await fetch(`${ENDPOINT}/message/clear/${selectedChat._id}`, { method: "DELETE", credentials: "include" });
             setMessages([]);
         }
     };
 
     return (
         <div className="flex h-screen bg-[#f3f4f6] p-0 md:p-10 gap-0 overflow-hidden font-sans">
-
-            {/* --- SIDEBAR --- */}
+            {/* SIDEBAR */}
             <aside className={`w-full md:w-[400px] bg-white border-r flex flex-col rounded-none md:rounded-l-[40px] shadow-sm ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-8 flex justify-between items-center">
                     <div className="flex items-center gap-3">
@@ -343,7 +326,7 @@ export default function ChatPage() {
                 </div>
             </aside>
 
-            {/* --- MAIN CHAT WINDOW --- */}
+            {/* MAIN CHAT */}
             <main className={`flex-1 bg-white rounded-none md:rounded-r-[40px] flex flex-col relative ${!selectedChat ? 'hidden md:flex items-center justify-center' : 'flex'}`}>
                 {selectedChat ? (
                     <>
@@ -390,7 +373,7 @@ export default function ChatPage() {
                                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                                     className="flex-1 bg-transparent outline-none font-bold text-gray-700"
                                 />
-                                <button onClick={toggleRecording} className={`p-3 transition-all rounded-full ${recording ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:text-orange-500'}`}>
+                                <button onClick={toggleRecording} className={`p-3 transition-all rounded-full ${recording ? 'bg-red-500 text-white animate-pulse' : 'text-gray-400 hover:text-orange-50'}`}>
                                     {recording ? <MicOff size={22} /> : <Mic size={22} />}
                                 </button>
                                 <button onClick={sendMessage} className="p-4 bg-orange-500 text-white rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all">
@@ -405,19 +388,17 @@ export default function ChatPage() {
                             <Send size={40} className="text-orange-500 opacity-50" />
                         </div>
                         <h3 className="text-xl font-black text-gray-400 uppercase tracking-widest">Select a chat to start</h3>
-                        <p className="text-gray-400 text-sm">Choose from active chats or search for a user</p>
                     </div>
                 )}
             </main>
 
-            {/* --- CALL MODAL --- */}
+            {/* CALL MODAL */}
             {callModal && (
                 <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-10 text-white">
                     <h2 className="text-2xl font-black mb-10 tracking-tighter uppercase">{receivingCall && !callAccepted ? `${callerName}` : 'In Call'}</h2>
                     <div className="flex flex-col md:flex-row gap-10 w-full max-w-5xl h-[60vh]">
                         <div className="flex-1 bg-gray-900 rounded-[40px] overflow-hidden relative border-2 border-white/10 shadow-2xl">
                             <video playsInline muted ref={myVideo} autoPlay className="w-full h-full object-cover" />
-                            <span className="absolute bottom-5 left-5 bg-black/50 px-4 py-1 rounded-full text-xs font-bold uppercase">You</span>
                         </div>
                         {callAccepted && (
                             <div className="flex-1 bg-gray-900 rounded-[40px] overflow-hidden relative border-2 border-white/10 shadow-2xl">
@@ -438,7 +419,7 @@ export default function ChatPage() {
                 </div>
             )}
 
-            {/* --- GROUP MODAL --- */}
+            {/* GROUP MODAL */}
             {isGroupModalOpen && (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-[40px] w-full max-w-md shadow-2xl p-10 animate-in zoom-in-95 border border-gray-100">
