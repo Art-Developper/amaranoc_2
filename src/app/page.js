@@ -3,7 +3,7 @@
 import {
   User, Globe, Search, Facebook, Instagram, Phone, Mail, MapPin, Tag, Menu, Calendar,
   ChevronRight, ChevronLeft, Home as HomeIcon, Pyramid, Warehouse, Waves, Trees,
-  Mountain, Flame, Palmtree, Coffee, Building, Layout, Key, Building2, Plus, Minus, Heart, X
+  Mountain, Flame, Palmtree, Coffee, Building, Layout, Key, Building2, Plus, Minus, Heart, X, SlidersHorizontal
 } from "lucide-react";
 import Image from "next/image"
 import Link from "next/link"
@@ -15,7 +15,6 @@ import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT հեռախոսով թեստավորման համար
 const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
 
 export default function Home() {
@@ -35,11 +34,22 @@ export default function Home() {
   const [peopleCount, setPeopleCount] = useState(1);
 
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date());
+
+  // --- ՕՐԱՑՈՒՅՑԻ ԺԱՄԱՆԱԿԱՀԱՏՎԱԾԻ ՍԹԵՅԹ ---
+  const [selectedRange, setSelectedRange] = useState({
+    start: null,
+    end: null
+  });
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // --- PAGINATION STATE ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const housesPerPage = 15;
 
   useEffect(() => {
     setSearchQuery(searchParams.get('search') || "");
@@ -51,31 +61,57 @@ export default function Home() {
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
     if (peopleCount > 1) params.append('people', peopleCount);
+
+    if (selectedRange.start) params.append('startDate', selectedRange.start.toISOString());
+    if (selectedRange.end) params.append('endDate', selectedRange.end.toISOString());
+
     selectedRegions.forEach(reg => params.append('region', reg));
 
-    // fetchData-ն օգտագործում է քո api.js լոգիկան, որտեղ արդեն կա բազային URL-ը
     fetchData(`houses?${params.toString()}`).then(data => {
-      if (data) setHouses(data);
+      if (data) {
+        setHouses(data);
+        setCurrentPage(1);
+      }
     });
-  }, [searchQuery, selectedRegions, minPrice, maxPrice, peopleCount]);
+  }, [searchQuery, selectedRegions, minPrice, maxPrice, peopleCount, selectedRange]);
 
   useEffect(() => {
-    // Լոգիկայի ուղղում (localhost -> ENDPOINT)
     fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => { setUser(data); setLoading(false); })
       .catch(() => { setUser(null); setLoading(false); });
   }, []);
 
+  const indexOfLastHouse = currentPage * housesPerPage;
+  const indexOfFirstHouse = indexOfLastHouse - housesPerPage;
+  const currentHouses = houses.slice(indexOfFirstHouse, indexOfLastHouse);
+  const totalPages = Math.ceil(houses.length / housesPerPage);
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDateClick = (item) => {
+    if (!item.currentMonth) return;
+    const clickedDate = new Date(year, month + item.monthOffset, item.day);
+
+    if (!selectedRange.start || (selectedRange.start && selectedRange.end)) {
+      setSelectedRange({ start: clickedDate, end: null });
+    } else {
+      if (clickedDate < selectedRange.start) {
+        setSelectedRange({ start: clickedDate, end: null });
+      } else {
+        setSelectedRange({ ...selectedRange, end: clickedDate });
+      }
+    }
+  };
+
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter") {
-      if (pathName !== "/") {
-        router.push(`/?search=${searchQuery}`);
-      } else {
-        const params = new URLSearchParams(searchParams);
-        params.set('search', searchQuery);
-        router.push(`?${params.toString()}`, { scroll: false });
-      }
+      const params = new URLSearchParams(searchParams);
+      params.set('search', searchQuery);
+      router.push(`?${params.toString()}`, { scroll: false });
     }
   };
 
@@ -86,10 +122,16 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    // Լոգիկայի ուղղում (localhost -> ENDPOINT)
     await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     window.location.reload();
+  };
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const scrollAmount = 300;
+      scrollRef.current.scrollBy({ left: direction === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
+    }
   };
 
   const checkScroll = () => {
@@ -97,26 +139,6 @@ export default function Home() {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
       setShowLeft(scrollLeft > 10);
       setShowRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) {
-      checkScroll();
-      el.addEventListener("scroll", checkScroll);
-      window.addEventListener("resize", checkScroll);
-      return () => {
-        el.removeEventListener("scroll", checkScroll);
-        window.removeEventListener("resize", checkScroll);
-      };
-    }
-  }, []);
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = 300;
-      scrollRef.current.scrollBy({ left: direction === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
     }
   };
 
@@ -150,10 +172,10 @@ export default function Home() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
   const calendarDays = [];
-  for (let i = firstDayOfMonth - 1; i >= 0; i--) calendarDays.push({ day: daysInPrevMonth - i, currentMonth: false });
-  for (let i = 1; i <= daysInMonth; i++) calendarDays.push({ day: i, currentMonth: true });
+  for (let i = firstDayOfMonth - 1; i >= 0; i--) calendarDays.push({ day: daysInPrevMonth - i, currentMonth: false, monthOffset: -1 });
+  for (let i = 1; i <= daysInMonth; i++) calendarDays.push({ day: i, currentMonth: true, monthOffset: 0 });
   const remainingSlots = 42 - calendarDays.length;
-  for (let i = 1; i <= remainingSlots; i++) calendarDays.push({ day: i, currentMonth: false });
+  for (let i = 1; i <= remainingSlots; i++) calendarDays.push({ day: i, currentMonth: false, monthOffset: 1 });
 
   return (
     <div className="min-h-screen bg-white">
@@ -181,14 +203,7 @@ export default function Home() {
             </div>
 
             <div className="relative hidden sm:block">
-              <input
-                type="text"
-                placeholder="Որոնում"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-48 lg:w-64 focus:outline-none focus:border-orange-400 transition"
-              />
+              <input type="text" placeholder="Որոնում" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={handleSearchKeyDown} className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-48 lg:w-64 focus:outline-none focus:border-orange-400 transition" />
               <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
 
@@ -211,11 +226,8 @@ export default function Home() {
             <hr className="border-gray-100 my-2" />
             {loading ? null : user ? (
               <div className="flex flex-col gap-6">
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-sm uppercase tracking-widest">Օգտատեր</span>
-                  <Link href="/userPage" className="text-[20px] font-bold text-gray-900" onClick={() => setIsMenuOpen(false)}>{user.name}</Link>
-                </div>
-                <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="text-[20px] font-bold text-red-500 text-left hover:text-red-600 transition-colors">Դուրս գալ</button>
+                <Link href="/userPage" className="text-[20px] font-bold text-gray-900" onClick={() => setIsMenuOpen(false)}>{user.name}</Link>
+                <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="text-[20px] font-bold text-red-500 text-left">Դուրս գալ</button>
               </div>
             ) : (
               <Link href="/login" className="text-[20px] font-bold text-gray-800 hover:text-orange-500 transition-colors" onClick={() => setIsMenuOpen(false)}>Մուտք</Link>
@@ -224,19 +236,28 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="max-w-[1440px] mx-auto px-4 flex gap-10 mt-6">
-        <aside className="w-[320px] flex-shrink-0 flex flex-col gap-4 border border-gray-100 rounded-[35px] p-6 h-[calc(100vh-40px)] sticky top-5 shadow-sm overflow-y-auto no-scrollbar bg-white">
+      <div className="max-w-[1440px] mx-auto px-4 flex flex-col lg:flex-row gap-10 mt-6 relative">
+
+        {isFilterDrawerOpen && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[115] lg:hidden" onClick={() => setIsFilterDrawerOpen(false)} />}
+
+        {/* --- ASIDE: FULL ORIGINAL FILTERS CONTENT --- */}
+        <aside className={`
+            fixed top-0 left-0 h-full w-[310px] bg-white z-[120] p-6 shadow-2xl transition-transform duration-500 lg:translate-x-0
+            lg:static lg:h-[calc(100vh-40px)] lg:w-[320px] lg:z-auto lg:shadow-sm lg:border lg:border-gray-100 lg:rounded-[35px] lg:flex-shrink-0 lg:sticky lg:top-5
+            ${isFilterDrawerOpen ? 'translate-x-0' : '-translate-x-full'}
+            flex flex-col gap-4 overflow-y-auto no-scrollbar
+        `}>
+          <div className="flex justify-between items-center lg:hidden mb-4 border-b pb-4">
+            <h2 className="font-black uppercase tracking-tighter text-xl text-orange-500 italic">Ֆիլտրներ</h2>
+            <button onClick={() => setIsFilterDrawerOpen(false)} className="p-2 bg-gray-100 rounded-full"><X size={20} /></button>
+          </div>
+
           <section>
             <h3 className="font-bold text-lg mb-4">Տարածաշրջան</h3>
             <div className="flex flex-col gap-4 max-h-[220px] overflow-y-auto no-scrollbar pr-2">
               {["Օհանավան", "Բջնի", "Դիլիջան", "Ծաղկաձոր", "Գառնի", "Սևան"].map((t) => (
                 <label key={t} className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={selectedRegions.includes(t)}
-                    onChange={() => handleRegionChange(t)}
-                    className="w-5 h-5 rounded border-gray-300 accent-black cursor-pointer"
-                  />
+                  <input type="checkbox" checked={selectedRegions.includes(t)} onChange={() => handleRegionChange(t)} className="w-5 h-5 rounded border-gray-300 accent-black cursor-pointer" />
                   <span className="text-gray-600 text-sm group-hover:text-black">{t}</span>
                 </label>
               ))}
@@ -255,36 +276,18 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <input
-                type="number"
-                placeholder="Սկսած"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50"
-              />
+              <input type="number" placeholder="Սկսած" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50" />
               <span className="text-gray-400">-</span>
-              <input
-                type="number"
-                placeholder="Մինչև"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50"
-              />
+              <input type="number" placeholder="Մինչև" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50/50" />
             </div>
           </section>
 
           <section>
             <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Մարդկանց թույլատրելի քանակ</h3>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setPeopleCount(prev => Math.max(1, prev - 1))}
-                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-              ><Minus size={18} /></button>
+              <button onClick={() => setPeopleCount(prev => Math.max(1, prev - 1))} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Minus size={18} /></button>
               <input type="text" value={peopleCount} className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" readOnly />
-              <button
-                onClick={() => setPeopleCount(prev => prev + 1)}
-                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-              ><Plus size={18} /></button>
+              <button onClick={() => setPeopleCount(prev => prev + 1)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Plus size={18} /></button>
             </div>
           </section>
 
@@ -300,13 +303,9 @@ export default function Home() {
           <section>
             <h3 className="font-bold text-sm mb-4 uppercase text-gray-700">Մարդկանց թույլատրելի քանակը գիշերակացով</h3>
             <div className="flex items-center gap-4">
-              <button
-                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-              ><Minus size={18} /></button>
+              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Minus size={18} /></button>
               <input type="text" className="w-12 text-center font-bold border-gray-200 border rounded-lg py-1" />
-              <button
-                className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-              ><Plus size={18} /></button>
+              <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><Plus size={18} /></button>
             </div>
           </section>
 
@@ -343,15 +342,23 @@ export default function Home() {
               <button className="px-8 py-2.5 rounded-full border border-gray-200 text-sm text-gray-500">Առանց լողավազանի</button>
             </div>
           </section>
+
+          <section className="lg:hidden mt-auto pb-10">
+            <button onClick={() => setIsFilterDrawerOpen(false)} className="w-full py-4 bg-[#ff9d43] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-orange-100">Կիրառել</button>
+          </section>
         </aside>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex gap-4 mb-6">
-            <button onClick={() => setIsCalendarOpen(true)} className="flex items-center gap-2 border border-gray-300 rounded-full px-6 py-2 hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm bg-white text-sm font-semibold">
+          <div className="flex gap-3 mb-6">
+            <button onClick={() => setIsCalendarOpen(true)} className="flex items-center gap-2 border border-gray-300 rounded-full px-5 md:px-6 py-2 hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm bg-white text-sm font-semibold">
               Օրացույց <Calendar size={18} />
+            </button>
+            <button onClick={() => setIsFilterDrawerOpen(true)} className="lg:hidden flex items-center gap-2 border border-gray-300 rounded-full px-5 py-2 hover:border-orange-500 hover:text-orange-500 transition-all shadow-sm bg-white text-sm font-semibold">
+              Ֆիլտրներ <SlidersHorizontal size={18} />
             </button>
           </div>
 
+          {/* --- CALENDAR MODAL (RANGE) --- */}
           {isCalendarOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
               <div className="bg-white rounded-[20px] w-full max-w-[480px] shadow-2xl overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
@@ -370,111 +377,82 @@ export default function Home() {
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-y-2 px-4 py-6 text-center">
-                  {calendarDays.map((item, index) => (
-                    <div key={index} className={`h-10 flex items-center justify-center text-[15px] font-bold rounded-lg transition-all ${item.currentMonth ? 'text-[#111827] cursor-pointer hover:bg-orange-100 hover:text-orange-500' : 'text-gray-200'}`}>
-                      {item.day}
-                    </div>
-                  ))}
+                  {calendarDays.map((item, index) => {
+                    const d = new Date(year, month + item.monthOffset, item.day);
+                    const isStart = selectedRange.start?.toDateString() === d.toDateString();
+                    const isEnd = selectedRange.end?.toDateString() === d.toDateString();
+                    const inRange = selectedRange.start && selectedRange.end && d > selectedRange.start && d < selectedRange.end;
+
+                    return (
+                      <div key={index}
+                        onClick={() => handleDateClick(item)}
+                        className={`h-10 flex items-center justify-center text-[15px] font-bold rounded-lg transition-all 
+                           ${item.currentMonth ? 'text-[#111827] cursor-pointer hover:bg-orange-100' : 'text-gray-200'}
+                           ${isStart || isEnd ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-md' : ''}
+                           ${inRange ? 'bg-orange-100 text-orange-600' : ''}
+                           `}>
+                        {item.day}
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="flex justify-end gap-4 p-6 pt-0 border-t border-gray-50 mt-2">
-                  <button onClick={() => setIsCalendarOpen(false)} className="px-8 py-2 text-[15px] font-bold text-gray-900 hover:bg-gray-100 rounded-full transition-all">Փակել</button>
-                  <button className="px-10 py-3 bg-[#f1f2f4] text-gray-400 text-[15px] font-bold rounded-[20px] transition-all">Հաստատել</button>
+                  <button onClick={() => { setSelectedRange({ start: null, end: null }); setIsCalendarOpen(false); }} className="px-8 py-2 text-[15px] font-bold text-gray-400 hover:bg-gray-100 rounded-full transition-all">Մաքրել</button>
+                  <button onClick={() => setIsCalendarOpen(false)} className="px-10 py-3 bg-[#1d2331] text-white text-[15px] font-bold rounded-[20px] transition-all">Հաստատել</button>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="relative border-t border-gray-100 pt-8 mb-10 group">
-            {showLeft && (
-              <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all"><ChevronLeft size={18} /></button>
-            )}
-            <div ref={scrollRef} onScroll={checkScroll} className="flex items-center gap-12 overflow-x-auto no-scrollbar scroll-smooth">
-              {categories.map((cat) => (
-                <div key={cat.id} className="flex flex-col items-center gap-2.5 cursor-pointer group/item min-w-max pb-4">
-                  <cat.icon size={24} className="text-gray-500 group-hover/item:text-black transition-colors" />
-                  <span className="text-[12px] font-medium text-gray-500 group-hover/item:text-black">{cat.label}</span>
-                </div>
-              ))}
-            </div>
-            {showRight && (
-              <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all"><ChevronRight size={18} /></button>
-            )}
-          </div>
-
+          {/* --- CATEGORIES & HOUSES (2 COLS MOBILE) --- */}
           <main>
             <h2 className="text-[22px] font-bold text-gray-800 mb-8 tracking-tight">Լավագույն առաջարկներ</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-              {houses.length > 0 ? (
-                houses.map((house) => (
-                  <div
-                    key={house.id}
-                    className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card"
-                  >
+            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
+              {currentHouses.length > 0 ? (
+                currentHouses.map((house) => (
+                  <div key={house.id} className="bg-white rounded-[22px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card">
                     <Link href={`/houses/${house.id}`}>
-                      <div className="relative h-64 w-full overflow-hidden">
-                        <Swiper
-                          modules={[Autoplay, Pagination]}
-                          spaceBetween={0}
-                          slidesPerView={1}
-                          loop={true}
-                          autoplay={{
-                            delay: 3000,
-                            disableOnInteraction: false,
-                          }}
-                          pagination={{ clickable: true }}
-                          className="h-full w-full"
-                          onSwiper={(swiper) => swiper.autoplay.stop()}
-                          onMouseEnter={(e) => e.currentTarget.swiper.autoplay.start()}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.swiper.autoplay.stop();
-                            e.currentTarget.swiper.slideToLoop(0);
-                          }}
-                        >
-                          {(Array.isArray(house.image) ? house.image : [house.image, house.image, house.image]).map((img, index) => (
-                            <SwiperSlide key={index}>
-                              <img
-                                src={img}
-                                alt={house.location}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
-                              />
-                            </SwiperSlide>
-                          ))}
-                        </Swiper>
-
-                        <div className="absolute bottom-5 right-5 z-20 bg-white/40 backdrop-blur-md p-2 rounded-full cursor-pointer hover:bg-white transition-all">
-                          <Heart size={20} className="text-gray-800" />
+                      <div className="relative h-44 md:h-64 w-full overflow-hidden">
+                        <img src={Array.isArray(house.image) ? house.image[0] : house.image} alt={house.location} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
+                        <div className="absolute bottom-2 right-2 md:bottom-5 md:right-5 z-20 bg-white/40 backdrop-blur-md p-1.5 md:p-2 rounded-full cursor-pointer hover:bg-white transition-all">
+                          <Heart size={18} className="text-gray-800" />
                         </div>
                       </div>
 
-                      <div className="p-6 flex flex-col gap-5">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-2 font-bold text-[15px] text-gray-800">
-                              <MapPin size={17} className="text-orange-400" /> {house.location}
+                      <div className="p-3 md:p-6 flex flex-col gap-2 md:gap-5">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                          <div className="flex flex-wrap items-center gap-2 md:gap-6">
+                            <div className="flex items-center gap-1 font-bold text-[11px] md:text-[15px] text-gray-800">
+                              <MapPin size={14} className="text-orange-400" /> {house.location}
                             </div>
-                            <div className="flex items-center gap-2 text-[15px] font-bold text-gray-500">
-                              <User size={17} className="text-orange-400" /> {house.people}
+                            <div className="flex items-center gap-1 text-[11px] md:text-[15px] font-bold text-gray-500">
+                              <User size={14} className="text-orange-400" /> {house.people}
                             </div>
                           </div>
-                          {house.rating !== "0" && (
-                            <div className="bg-orange-400 text-white px-2.5 py-1 rounded-xl text-[13px] font-bold flex items-center gap-1">
-                              ★ {house.rating}
-                            </div>
-                          )}
+                          {house.rating !== "0" && <div className="bg-orange-400 text-white px-2 py-0.5 rounded-lg text-[9px] md:text-[13px] font-bold flex items-center gap-1 mt-1 md:mt-0">★ {house.rating}</div>}
                         </div>
-                        <div className="flex items-center gap-2 text-[22px] font-black text-[#343a4a]">
-                          <Tag size={22} className="text-orange-400" /> {house.price}
+                        <div className="flex items-center gap-1 text-[14px] md:text-[22px] font-black text-[#343a4a]">
+                          <Tag size={16} className="text-orange-400 md:w-5 md:h-5" /> {house.price}
                         </div>
                       </div>
                     </Link>
                   </div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-20 text-gray-400 italic">
-                  Ոչինչ չի գտնվել "{searchQuery}" հարցումով
-                </div>
+                <div className="col-span-full text-center py-20 text-gray-400 italic">Ոչինչ չի գտնվել</div>
               )}
             </div>
+
+            {/* --- PAGINATION --- */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-12 mb-10">
+                <button onClick={() => currentPage > 1 && paginate(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-full border border-gray-200 disabled:opacity-20 hover:bg-gray-50 transition-all"><ChevronLeft size={20} /></button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button key={i} onClick={() => paginate(i + 1)} className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${currentPage === i + 1 ? 'bg-[#1d2331] text-white shadow-lg' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{i + 1}</button>
+                ))}
+                <button onClick={() => currentPage < totalPages && paginate(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-full border border-gray-200 disabled:opacity-20 hover:bg-gray-50 transition-all"><ChevronRight size={20} /></button>
+              </div>
+            )}
           </main>
         </div>
       </div>
@@ -486,9 +464,9 @@ export default function Home() {
         </div>
         <div className="relative z-10 max-w-6xl mx-auto border border-gray-700 rounded-3xl p-10 text-center backdrop-blur-sm">
           <div className="flex justify-center items-center gap-8 mb-10">
-            <div className="w-10 md:w-40 h-px bg-white/30"></div>
-            <h2 className="text-2xl md:text-3xl font-light uppercase tracking-wider">Տեղադրել հայտարարություն</h2>
-            <div className="w-10 md:w-40 h-px bg-white/30"></div>
+            <div className="hidden md:block w-40 h-px bg-white/30"></div>
+            <h2 className="text-2xl md:text-3xl font-light uppercase tracking-wider text-center">Տեղադրել հայտարարություն</h2>
+            <div className="hidden md:block w-40 h-px bg-white/30"></div>
           </div>
           <p className="mb-10 text-gray-300">Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -502,7 +480,7 @@ export default function Home() {
 
       <footer className="bg-[#101623] text-white pt-10">
         <h2 className="text-center text-3xl mb-10 tracking-widest font-light uppercase">Կոնտակտներ</h2>
-        <div className="flex flex-wrap justify-center gap-10 px-4 mb-10">
+        <div className="flex flex-wrap justify-center gap-10 px-4 mb-10 font-medium">
           <div className="flex items-center gap-2"><Phone size={20} className="text-orange-500" /> <span className="text-sm">041-611-611 / 044-611-611</span></div>
           <div className="flex items-center gap-2 uppercase tracking-wide"><Mail size={20} className="text-orange-500" /> <span className="text-sm">amaranoc.info@gmail.com</span></div>
           <div className="flex items-center gap-2 uppercase tracking-wide"><Instagram size={20} className="text-orange-500" /> <span className="text-sm font-medium">AMARANOC.AM</span></div>

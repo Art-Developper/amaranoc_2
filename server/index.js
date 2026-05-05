@@ -81,7 +81,7 @@ io.on("connection", (socket) => {
 app.use(cors({
     origin: [
         "http://localhost:3000",
-        "http://192.168.0.46:3000"    
+        "http://192.168.0.46:3000"
     ],
     credentials: true
 }));
@@ -314,13 +314,69 @@ app.get("/api/message/:chatId", async (req, res) => {
 });
 
 
-app.get("/api/houses", (req, res) => {
-    const { search } = req.query;
+app.get("/api/houses", async (req, res) => {
+    const { search, minPrice, maxPrice, people, startDate, endDate } = req.query;
+
+    let filteredHouses = [...houses];
+
+    // 1. Որոնում ըստ տեղանքի (Քո սկզբնական կոդը)
     if (search) {
         const regex = new RegExp(search.split("").join(".*"), "i");
-        return res.json(houses.filter(h => regex.test(h.location)));
+        filteredHouses = filteredHouses.filter(h => regex.test(h.location));
     }
-    res.json(houses);
+
+    /* 👇 ԱՅՍՏԵՂԻՑ ՍԿՍՎՈՒՄ Է ԻՄ ԱՎԵԼԱՑՐԱԾ ԼՈԳԻԿԱՆ 👇 */
+
+    // 2. Ֆիլտր ըստ գնի
+    if (minPrice) {
+        filteredHouses = filteredHouses.filter(h => {
+            const price = parseInt(h.price.replace(/[^0-9]/g, ''));
+            return price >= parseInt(minPrice);
+        });
+    }
+    if (maxPrice) {
+        filteredHouses = filteredHouses.filter(h => {
+            const price = parseInt(h.price.replace(/[^0-9]/g, ''));
+            return price <= parseInt(maxPrice);
+        });
+    }
+
+    // 3. Ֆիլտր ըստ մարդկանց քանակի
+    if (people) {
+        filteredHouses = filteredHouses.filter(h => parseInt(h.people) >= parseInt(people));
+    }
+
+    // 4. ՕՐԱՑՈՒՅՑԻ ԼՈԳԻԿԱ (Զտում ենք զբաղված տները)
+    if (startDate && endDate) {
+        try {
+            const reqStart = new Date(startDate);
+            const reqEnd = new Date(endDate);
+
+            // Ստանում ենք բոլոր օգտատերերի ամրագրումները բազայից
+            const allUsers = await User.find({});
+            const allBookings = allUsers.reduce((acc, user) => [...acc, ...user.bookings], []);
+
+            filteredHouses = filteredHouses.filter(house => {
+                // Ստուգում ենք՝ արդյոք այս տան համար կա որևէ ամրագրում, որը համընկնում է ընտրված օրերի հետ
+                const isBooked = allBookings.some(booking => {
+                    if (Number(booking.houseId) !== Number(house.id)) return false;
+
+                    const bStart = new Date(booking.startDate);
+                    const bEnd = new Date(booking.endDate || booking.startDate);
+
+                    // Ժամանակահատվածների համընկնման ստուգում
+                    return (reqStart <= bEnd && reqEnd >= bStart);
+                });
+
+                return !isBooked; // Վերադարձնում ենք միայն այն տները, որոնք ԶԲԱՂՎԱԾ ՉԵՆ
+            });
+        } catch (error) {
+            console.error("Calendar filter error:", error);
+        }
+    }
+    /* 👆 ԻՄ ԱՎԵԼԱՑՐԱԾ ԼՈԳԻԿԱՅԻ ԱՎԱՐՏԸ 👆 */
+
+    res.json(filteredHouses);
 });
 
 app.get("/api/houses/:id", (req, res) => res.json(houses.find(h => h.id == req.params.id)));
