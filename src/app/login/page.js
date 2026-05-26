@@ -5,6 +5,9 @@ import { User, Globe } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT
+const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
+
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -14,7 +17,8 @@ export default function LoginPage() {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+            // 👇 Ավելացված է /api ENDPOINT-ից հետո
+            const response = await fetch(`${ENDPOINT}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

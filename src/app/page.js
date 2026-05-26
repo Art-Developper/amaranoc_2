@@ -15,6 +15,7 @@ import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
+// Լոգիկայի ուղղում՝ դինամիկ ENDPOINT
 const ENDPOINT = process.env.NEXT_PUBLIC_API_URL || "http://192.168.0.46:5000";
 
 export default function Home() {
@@ -34,20 +35,18 @@ export default function Home() {
   const [peopleCount, setPeopleCount] = useState(1);
 
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false); 
   const [viewDate, setViewDate] = useState(new Date());
 
-  // --- ՕՐԱՑՈՒՅՑԻ ԺԱՄԱՆԱԿԱՀԱՏՎԱԾԻ ՍԹԵՅԹ ---
-  const [selectedRange, setSelectedRange] = useState({
-    start: null,
-    end: null
+  const [selectedRange, setSelectedRange] = useState({ 
+    start: null, 
+    end: null 
   });
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
   const housesPerPage = 15;
 
@@ -61,21 +60,23 @@ export default function Home() {
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
     if (peopleCount > 1) params.append('people', peopleCount);
-
+    
     if (selectedRange.start) params.append('startDate', selectedRange.start.toISOString());
     if (selectedRange.end) params.append('endDate', selectedRange.end.toISOString());
-
+    
     selectedRegions.forEach(reg => params.append('region', reg));
 
-    fetchData(`houses?${params.toString()}`).then(data => {
+    // 👇 ԻՄ ԱՎԵԼԱՑՐԱԾ /api-ն fetchData-ի մեջ
+    fetchData(`api/houses?${params.toString()}`).then(data => {
       if (data) {
         setHouses(data);
-        setCurrentPage(1);
+        setCurrentPage(1); 
       }
     });
   }, [searchQuery, selectedRegions, minPrice, maxPrice, peopleCount, selectedRange]);
 
   useEffect(() => {
+    // 👇 Ստուգված է՝ ENDPOINT-ից հետո կա /api
     fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => { setUser(data); setLoading(false); })
@@ -95,7 +96,7 @@ export default function Home() {
   const handleDateClick = (item) => {
     if (!item.currentMonth) return;
     const clickedDate = new Date(year, month + item.monthOffset, item.day);
-
+    
     if (!selectedRange.start || (selectedRange.start && selectedRange.end)) {
       setSelectedRange({ start: clickedDate, end: null });
     } else {
@@ -122,6 +123,7 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
+    // 👇 Ստուգված է՝ ENDPOINT-ից հետո կա /api
     await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     window.location.reload();
@@ -237,10 +239,9 @@ export default function Home() {
       </header>
 
       <div className="max-w-[1440px] mx-auto px-4 flex flex-col lg:flex-row gap-10 mt-6 relative">
-
+        
         {isFilterDrawerOpen && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[115] lg:hidden" onClick={() => setIsFilterDrawerOpen(false)} />}
 
-        {/* --- ASIDE: FULL ORIGINAL FILTERS CONTENT --- */}
         <aside className={`
             fixed top-0 left-0 h-full w-[310px] bg-white z-[120] p-6 shadow-2xl transition-transform duration-500 lg:translate-x-0
             lg:static lg:h-[calc(100vh-40px)] lg:w-[320px] lg:z-auto lg:shadow-sm lg:border lg:border-gray-100 lg:rounded-[35px] lg:flex-shrink-0 lg:sticky lg:top-5
@@ -248,8 +249,8 @@ export default function Home() {
             flex flex-col gap-4 overflow-y-auto no-scrollbar
         `}>
           <div className="flex justify-between items-center lg:hidden mb-4 border-b pb-4">
-            <h2 className="font-black uppercase tracking-tighter text-xl text-orange-500 italic">Ֆիլտրներ</h2>
-            <button onClick={() => setIsFilterDrawerOpen(false)} className="p-2 bg-gray-100 rounded-full"><X size={20} /></button>
+              <h2 className="font-black uppercase tracking-tighter text-xl text-orange-500 italic">Ֆիլտրներ</h2>
+              <button onClick={() => setIsFilterDrawerOpen(false)} className="p-2 bg-gray-100 rounded-full"><X size={20}/></button>
           </div>
 
           <section>
@@ -344,7 +345,7 @@ export default function Home() {
           </section>
 
           <section className="lg:hidden mt-auto pb-10">
-            <button onClick={() => setIsFilterDrawerOpen(false)} className="w-full py-4 bg-[#ff9d43] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-orange-100">Կիրառել</button>
+              <button onClick={() => setIsFilterDrawerOpen(false)} className="w-full py-4 bg-[#ff9d43] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-orange-100">Կիրառել</button>
           </section>
         </aside>
 
@@ -358,7 +359,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* --- CALENDAR MODAL (RANGE) --- */}
           {isCalendarOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
               <div className="bg-white rounded-[20px] w-full max-w-[480px] shadow-2xl overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
@@ -384,9 +384,9 @@ export default function Home() {
                     const inRange = selectedRange.start && selectedRange.end && d > selectedRange.start && d < selectedRange.end;
 
                     return (
-                      <div key={index}
-                        onClick={() => handleDateClick(item)}
-                        className={`h-10 flex items-center justify-center text-[15px] font-bold rounded-lg transition-all 
+                      <div key={index} 
+                           onClick={() => handleDateClick(item)}
+                           className={`h-10 flex items-center justify-center text-[15px] font-bold rounded-lg transition-all 
                            ${item.currentMonth ? 'text-[#111827] cursor-pointer hover:bg-orange-100' : 'text-gray-200'}
                            ${isStart || isEnd ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-md' : ''}
                            ${inRange ? 'bg-orange-100 text-orange-600' : ''}
@@ -397,20 +397,40 @@ export default function Home() {
                   })}
                 </div>
                 <div className="flex justify-end gap-4 p-6 pt-0 border-t border-gray-50 mt-2">
-                  <button onClick={() => { setSelectedRange({ start: null, end: null }); setIsCalendarOpen(false); }} className="px-8 py-2 text-[15px] font-bold text-gray-400 hover:bg-gray-100 rounded-full transition-all">Մաքրել</button>
+                  <button onClick={() => { setSelectedRange({start:null, end:null}); setIsCalendarOpen(false); }} className="px-8 py-2 text-[15px] font-bold text-gray-400 hover:bg-gray-100 rounded-full transition-all">Մաքրել</button>
                   <button onClick={() => setIsCalendarOpen(false)} className="px-10 py-3 bg-[#1d2331] text-white text-[15px] font-bold rounded-[20px] transition-all">Հաստատել</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* --- CATEGORIES & HOUSES (2 COLS MOBILE) --- */}
+          <div className="relative border-t border-gray-100 pt-8 mb-10 group">
+            {showLeft && (
+              <button onClick={() => scroll("left")} className="absolute left-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all"><ChevronLeft size={18} /></button>
+            )}
+            <div ref={scrollRef} onScroll={checkScroll} className="flex items-center gap-12 overflow-x-auto no-scrollbar scroll-smooth">
+              {categories.map((cat) => (
+                <div key={cat.id} className="flex flex-col items-center gap-2.5 cursor-pointer group/item min-w-max pb-4">
+                  <cat.icon size={24} className="text-gray-500 group-hover/item:text-black transition-colors" />
+                  <span className="text-[12px] font-medium text-gray-500 group-hover/item:text-black">{cat.label}</span>
+                </div>
+              ))}
+            </div>
+            {showRight && (
+              <button onClick={() => scroll("right")} className="absolute right-0 top-[40%] -translate-y-1/2 z-20 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:scale-110 transition-all"><ChevronRight size={18} /></button>
+            )}
+          </div>
+
           <main>
             <h2 className="text-[22px] font-bold text-gray-800 mb-8 tracking-tight">Լավագույն առաջարկներ</h2>
+            
             <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
               {currentHouses.length > 0 ? (
                 currentHouses.map((house) => (
-                  <div key={house.id} className="bg-white rounded-[22px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card">
+                  <div
+                    key={house.id}
+                    className="bg-white rounded-[22px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 group/card"
+                  >
                     <Link href={`/houses/${house.id}`}>
                       <div className="relative h-44 md:h-64 w-full overflow-hidden">
                         <img src={Array.isArray(house.image) ? house.image[0] : house.image} alt={house.location} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
@@ -421,15 +441,11 @@ export default function Home() {
 
                       <div className="p-3 md:p-6 flex flex-col gap-2 md:gap-5">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                          <div className="flex flex-wrap items-center gap-2 md:gap-6">
-                            <div className="flex items-center gap-1 font-bold text-[11px] md:text-[15px] text-gray-800">
-                              <MapPin size={14} className="text-orange-400" /> {house.location}
-                            </div>
-                            <div className="flex items-center gap-1 text-[11px] md:text-[15px] font-bold text-gray-500">
-                              <User size={14} className="text-orange-400" /> {house.people}
-                            </div>
+                          <div className="flex flex-wrap items-center gap-2 md:gap-6 font-bold text-[11px] md:text-[15px] text-gray-800">
+                             <MapPin size={14} className="text-orange-400" /> {house.location}
+                             <User size={14} className="text-orange-400" /> {house.people}
                           </div>
-                          {house.rating !== "0" && <div className="bg-orange-400 text-white px-2 py-0.5 rounded-lg text-[9px] md:text-[13px] font-bold flex items-center gap-1 mt-1 md:mt-0">★ {house.rating}</div>}
+                          {house.rating !== "0" && <div className="bg-orange-400 text-white px-2 py-0.5 rounded-lg text-[9px] md:text-[13px] font-bold mt-1 md:mt-0">★ {house.rating}</div>}
                         </div>
                         <div className="flex items-center gap-1 text-[14px] md:text-[22px] font-black text-[#343a4a]">
                           <Tag size={16} className="text-orange-400 md:w-5 md:h-5" /> {house.price}
@@ -439,18 +455,19 @@ export default function Home() {
                   </div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-20 text-gray-400 italic">Ոչինչ չի գտնվել</div>
+                <div className="col-span-full text-center py-20 text-gray-400 italic">
+                  Ոչինչ չի գտնվել
+                </div>
               )}
             </div>
 
-            {/* --- PAGINATION --- */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 mt-12 mb-10">
-                <button onClick={() => currentPage > 1 && paginate(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-full border border-gray-200 disabled:opacity-20 hover:bg-gray-50 transition-all"><ChevronLeft size={20} /></button>
+                <button onClick={() => currentPage > 1 && paginate(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-full border border-gray-200 disabled:opacity-20 hover:bg-gray-50 transition-all"><ChevronLeft size={20}/></button>
                 {[...Array(totalPages)].map((_, i) => (
                   <button key={i} onClick={() => paginate(i + 1)} className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${currentPage === i + 1 ? 'bg-[#1d2331] text-white shadow-lg' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{i + 1}</button>
                 ))}
-                <button onClick={() => currentPage < totalPages && paginate(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-full border border-gray-200 disabled:opacity-20 hover:bg-gray-50 transition-all"><ChevronRight size={20} /></button>
+                <button onClick={() => currentPage < totalPages && paginate(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-full border border-gray-200 disabled:opacity-20 hover:bg-gray-50 transition-all"><ChevronRight size={20}/></button>
               </div>
             )}
           </main>

@@ -35,8 +35,8 @@ export default function UserPage() {
     }, []);
 
     const fetchProfile = () => {
-        // Ուղղված է՝ ավելացվել է /api
-        fetch(`${ENDPOINT}/profile`, { credentials: "include" })
+        // 👇 Ավելացված է /api
+        fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
             .then(res => {
                 if (!res.ok) throw new Error();
                 return res.json();
@@ -60,8 +60,8 @@ export default function UserPage() {
     };
 
     const handleLogout = async () => {
-        // Ուղղված է՝ ավելացվել է /api
-        await fetch(`${ENDPOINT}/logout`, {
+        // 👇 Ավելացված է /api
+        await fetch(`${ENDPOINT}/api/logout`, {
             method: "POST",
             credentials: "include"
         });
@@ -70,8 +70,8 @@ export default function UserPage() {
     };
 
     const handleDelete = async () => {
-        // Ուղղված է՝ ավելացվել է /api
-        const res = await fetch(`${ENDPOINT}/user/delete`, {
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/user/delete`, {
             method: "DELETE",
             credentials: "include"
         });
@@ -83,8 +83,8 @@ export default function UserPage() {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        // Ուղղված է՝ ավելացվել է /api
-        const res = await fetch(`${ENDPOINT}/user/update`, {
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/user/update`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(formData),

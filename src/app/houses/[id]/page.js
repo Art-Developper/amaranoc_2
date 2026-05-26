@@ -55,15 +55,15 @@ export default function HouseDetails() {
     }
 
     useEffect(() => {
-        // fetchData-ն օգտագործում է քո api.js-ի լոգիկան
-        fetchData(`houses/${id}`).then(data => setHouse(data));
-        fetchData(`houses`).then(data => {
+        // 👇 Ավելացված է api/
+        fetchData(`api/houses/${id}`).then(data => setHouse(data));
+        fetchData(`api/houses`).then(data => {
             if (data) setSimilarHouses(data.filter(h => h.id !== parseInt(id)).slice(0, 3));
         });
     }, [id]);
 
     useEffect(() => {
-        // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+        // 👇 Ստուգված է /api
         fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
             .then(res => res.ok ? res.json() : Promise.reject())
             .then(data => { setUser(data); setLoading(false); })
@@ -71,7 +71,7 @@ export default function HouseDetails() {
     }, []);
 
     const handleLogout = async () => {
-        // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+        // 👇 Ստուգված է /api
         await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
         setUser(null);
         window.location.reload();
@@ -127,7 +127,7 @@ export default function HouseDetails() {
             return;
         }
         try {
-            // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+            // 👇 Փոխարինված է ENDPOINT-ով և ավելացված է /api
             const response = await fetch(`${ENDPOINT}/api/book`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -333,7 +333,6 @@ export default function HouseDetails() {
                 </div>
             </main>
 
-            {/* Modals ... (Պահպանված է նույնությամբ) */}
             {bookingStep === 1 && (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-[45px] w-full max-w-[550px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">

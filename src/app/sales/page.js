@@ -38,14 +38,15 @@ export default function Sales() {
 
   // 1. Ստանում ենք զեղչերի տվյալները սերվերից
   useEffect(() => {
-    // fetchData-ն օգտագործում է քո api.js-ի լոգիկան
-    fetchData('sales').then(data => {
+    // 👇 ԻՄ ԱՎԵԼԱՑՐԱԾ api/ մասնիկը
+    fetchData('api/sales').then(data => {
       if (data) setSalesData(data);
     });
   }, []);
 
-  // 2. Լոգիկայի ուղղում՝ պրոֆիլի ստուգում (localhost -> ENDPOINT)
+  // 2. Լոգիկայի ուղղում՝ պրոֆիլի ստուգում
   useEffect(() => {
+    // 👇 Ստուգված է՝ ENDPOINT-ից հետո կա /api
     fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => {
@@ -71,14 +72,15 @@ export default function Sales() {
     }
   };
 
-  // Լոգիկայի ուղղում՝ logout (localhost -> ENDPOINT)
+  // Լոգիկայի ուղղում՝ logout
   const handleLogout = async () => {
+    // 👇 Ստուգված է՝ ENDPOINT-ից հետո կա /api
     await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     window.location.reload();
   };
 
-  // Լոգիկայի ուղղում՝ Նվեր քարտի պատվեր (localhost -> ENDPOINT)
+  // Նվեր քարտի պատվերի ուղարկում
   const handleOrderSubmit = async () => {
     if (!user) {
       router.push("/login");
@@ -90,6 +92,7 @@ export default function Sales() {
     }
 
     try {
+      // 👇 Ստուգված է՝ ENDPOINT-ից հետո կա /api
       const response = await fetch(`${ENDPOINT}/api/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,7 +105,7 @@ export default function Sales() {
           totalPrice: parseInt(selectedPrice.replace(/[^0-9]/g, '')),
           contactInfo: {
             name: user.name,
-            email: user.email,
+            email: user.email, 
             phone: formData.phoneNumber
           }
         }),
@@ -139,6 +142,7 @@ export default function Sales() {
           <div className="flex gap-5 items-center">
             <Globe className="w-5 h-5 cursor-pointer text-gray-700 hover:text-orange-500" />
 
+            {/* Desktop Auth Status */}
             <div className="hidden min-[1321px]:flex items-center">
               {loading ? null : user ? (
                 <div className="flex items-center gap-4">
@@ -150,6 +154,7 @@ export default function Sales() {
               )}
             </div>
 
+            {/* Search Input */}
             <div className="relative hidden sm:block">
               <input
                 type="text"
@@ -175,7 +180,7 @@ export default function Sales() {
         onClick={() => setIsMenuOpen(false)}
       />
       <div className={`fixed top-0 right-0 h-full w-[350px] sm:w-[450px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <button className="absolute top-8 right-8 w-11 h-11 border border-gray-200 rounded-full flex items-center justify-center text-gray-400" onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
+        <button className="absolute top-8 right-8 w-11 h-11 border border-gray-100 rounded-full flex items-center justify-center text-gray-400" onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
         <nav className="flex flex-col gap-10 mt-24">
           <Link href="/" className="text-[20px] font-bold text-gray-900" onClick={() => setIsMenuOpen(false)}>Գլխավոր</Link>
           <Link href="/sales" className="text-[20px] font-bold text-orange-500" onClick={() => setIsMenuOpen(false)}>Զեղչեր</Link>
@@ -290,7 +295,7 @@ export default function Sales() {
           </div>
           <p className="mb-10 text-gray-400">Մուտքագրեք Ձեր տվյալները նշված դաշտերում և մենք կկապնվենք Ձեզ հետ</p>
           <div className="flex flex-wrap justify-center gap-4">
-            <input type="text" placeholder="Անուն Ազգանուն" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
+            <input type="text" placeholder="Անուն Ազգանուն" className="bg-white/10 border border-gray-500 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
             <input type="tel" placeholder="Հեռախոսահամար" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
             <input type="email" placeholder="Էլ․ Հասցե" className="bg-white/10 border border-gray-600 rounded-2xl px-6 py-3 w-full md:w-64 outline-none focus:border-orange-400 text-white" />
             <button className="bg-orange-400 text-black px-10 py-3 rounded-2xl font-bold hover:bg-orange-500 transition-all">Ուղարկել</button>

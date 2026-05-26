@@ -56,13 +56,13 @@ export default function ChatPage() {
 
     // 1. Մուտքի և Socket-ի նախնական կարգավորում
     useEffect(() => {
-        // Կարևոր է օգտագործել ENDPOINT փոփոխականը
-        fetch(`${ENDPOINT}/profile`, { credentials: "include" })
+        // 👇 Ավելացված է /api
+        fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
             .then(res => res.ok ? res.json() : Promise.reject())
             .then(data => {
                 setUser(data);
 
-                // Միացնում ենք Socket-ը դինամիկ հասցեով
+                // Միացնում ենք Socket-ը (Socket-ի համար սովորաբար /api պետք չէ, բայց պահում ենք քո կոդի տրամաբանությունը)
                 socket.current = io(ENDPOINT.replace("/api", ""));
                 socket.current.emit("setup", data);
 
@@ -105,10 +105,11 @@ export default function ChatPage() {
         return () => socket.current.off("message received", handleMessageReceived);
     }, [selectedChat]);
 
-    // --- ՖՈՒՆԿՑԻԱՆԵՐ (Բոլոր fetch-երը ուղղված են) ---
+    // --- ՖՈՒՆԿՑԻԱՆԵՐ ---
 
     const fetchChats = async () => {
-        const res = await fetch(`${ENDPOINT}/chat`, { credentials: "include" });
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/chat`, { credentials: "include" });
         if (res.ok) {
             const data = await res.json();
             setChats(data);
@@ -116,7 +117,8 @@ export default function ChatPage() {
     };
 
     const fetchAllUsers = async () => {
-        const res = await fetch(`${ENDPOINT}/users`, { credentials: "include" });
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/users`, { credentials: "include" });
         if (res.ok) {
             const data = await res.json();
             setAllUsers(data);
@@ -125,7 +127,8 @@ export default function ChatPage() {
 
     const fetchMessages = async () => {
         if (!selectedChat) return;
-        const res = await fetch(`${ENDPOINT}/message/${selectedChat._id}`, { credentials: "include" });
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/message/${selectedChat._id}`, { credentials: "include" });
         if (res.ok) {
             const data = await res.json();
             setMessages(data);
@@ -143,7 +146,8 @@ export default function ChatPage() {
         if (!newMessage.trim()) return;
         const messageData = { content: newMessage, chatId: selectedChat._id };
 
-        const res = await fetch(`${ENDPOINT}/amessage`, {
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/message`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(messageData),
@@ -157,7 +161,8 @@ export default function ChatPage() {
     };
 
     const accessChat = async (userId) => {
-        const res = await fetch(`${ENDPOINT}/chat`, {
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId }),
@@ -173,7 +178,8 @@ export default function ChatPage() {
             alert("Մուտքագրեք անուն և ընտրեք առնվազն 2 հոգի");
             return;
         }
-        const res = await fetch(`${ENDPOINT}/chat/group`, {
+        // 👇 Ավելացված է /api
+        const res = await fetch(`${ENDPOINT}/api/chat/group`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: groupName, users: selectedUsersForGroup }),
@@ -198,6 +204,7 @@ export default function ChatPage() {
                     const reader = new FileReader();
                     reader.readAsDataURL(blob);
                     reader.onloadend = async () => {
+                        // 👇 Այստեղ արդեն կար /api
                         const res = await fetch(`${ENDPOINT}/api/message`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -272,7 +279,8 @@ export default function ChatPage() {
 
     const clearChat = async () => {
         if (window.confirm("Արդյո՞ք ուզում եք մաքրել ամբողջ պատմությունը")) {
-            await fetch(`${ENDPOINT}/message/clear/${selectedChat._id}`, { method: "DELETE", credentials: "include" });
+            // 👇 Ավելացված է /api
+            await fetch(`${ENDPOINT}/api/message/clear/${selectedChat._id}`, { method: "DELETE", credentials: "include" });
             setMessages([]);
         }
     };

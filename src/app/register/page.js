@@ -21,7 +21,7 @@ export default function RegisterPage() {
         e.preventDefault();
 
         try {
-            // Լոգիկայի ուղղում (localhost -> ENDPOINT)
+            // 👇 Ստուգված է՝ ENDPOINT-ից հետո կա /api
             const response = await fetch(`${ENDPOINT}/api/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

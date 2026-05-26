@@ -55,10 +55,10 @@ export default function Service() {
   for (let i = 1; i <= daysInMonth; i++) calendarDays.push(new Date(year, month, i));
 
   useEffect(() => {
-    // fetchData-ն արդեն օգտագործում է քո api.js լոգիկան
-    fetchData('services').then(data => { if (data) setServicesData(data); });
+    // 👇 Ավելացված է api/
+    fetchData('api/services').then(data => { if (data) setServicesData(data); });
 
-    // Լոգիկայի ուղղում
+    // 👇 ENDPOINT-ի կողքին ավելացված է /api (եթե չկար)
     fetch(`${ENDPOINT}/api/profile`, { credentials: "include" })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => { setUser(data); setLoading(false); setContactForm({ name: data.name, phone: data.phoneNumber || "" }) })
@@ -77,7 +77,7 @@ export default function Service() {
       alert("Լրացրեք բոլոր դաշտերը"); return;
     }
     try {
-      // Լոգիկայի ուղղում
+      // 👇 ENDPOINT-ի կողքին ավելացված է /api
       const response = await fetch(`${ENDPOINT}/api/book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -103,7 +103,7 @@ export default function Service() {
   };
 
   const handleLogout = async () => {
-    // Լոգիկայի ուղղում
+    // 👇 ENDPOINT-ի կողքին ավելացված է /api
     await fetch(`${ENDPOINT}/api/logout`, { method: "POST", credentials: "include" });
     setUser(null);
     window.location.reload();
@@ -130,49 +130,49 @@ export default function Service() {
       <header className="relative bg-white border-b border-gray-100 z-[60]">
         <div className="flex justify-between items-center max-w-[1440px] mx-auto py-7 px-4">
           <Link href="/"><img src="/logo.svg" alt="Logo" width="170" /></Link>
-          <nav className="hidden min-[1321px]:flex items-center gap-10 font-medium text-sm text-gray-700">
+          <nav className="hidden min-[1321px]:flex items-center gap-10 font-medium text-sm text-gray-700 uppercase tracking-widest">
             <Link className={linkClass("/")} href="/">Գլխավոր</Link>
             <Link className={linkClass("/sales")} href="/sales">Զեղչեր</Link>
             <Link className={linkClass("/service")} href="/service">Ծառայություններ</Link>
             <Link className={linkClass("/about_us")} href="/about_us">Մեր մասին</Link>
           </nav>
           <div className="flex gap-5 items-center">
-            <Globe className="w-5 h-5 cursor-pointer text-gray-700" />
+            <Globe className="w-5 h-5 cursor-pointer text-gray-700 hover:text-orange-500 transition" />
             <div className="hidden min-[1321px]:flex items-center">
               {loading ? null : user ? (
                 <div className="flex items-center gap-4">
-                  <Link href="/userPage" className="text-[14px] font-bold text-orange-500 border-b border-orange-500">{user.name}</Link>
-                  <button onClick={handleLogout} className="text-sm text-red-500 hover:underline">Դուրս գալ</button>
+                  <Link href="/userPage" className="text-[14px] font-black text-orange-500 border-b border-orange-500 pb-1">{user.name}</Link>
+                  <button onClick={handleLogout} className="text-xs text-red-500 font-bold hover:underline uppercase">Ելք</button>
                 </div>
               ) : (
-                <Link className={linkClass("/login")} href="/login"><User className="w-5 h-5 cursor-pointer" /></Link>
+                <Link className={linkClass("/login")} href="/login"><User className="w-5 h-5 cursor-pointer text-gray-700 hover:text-orange-500 transition" /></Link>
               )}
             </div>
             <div className="relative hidden sm:block">
-              <input type="text" placeholder="Որոնում" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={handleSearchKeyDown} className="pl-4 pr-10 py-2 border rounded-3xl text-sm w-48 lg:w-64 focus:outline-none focus:border-orange-400 transition" />
+              <input type="text" placeholder="Որոնում" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={handleSearchKeyDown} className="pl-4 pr-10 py-2.5 border border-gray-200 rounded-3xl text-sm w-48 lg:w-64 focus:outline-none focus:border-orange-400 transition" />
               <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
-            <button className="min-[1321px]:hidden p-2 text-gray-700" onClick={() => setIsMenuOpen(true)}><Menu size={30} /></button>
+            <button className="min-[1321px]:hidden p-2 text-gray-700 hover:text-orange-500 transition-all" onClick={() => setIsMenuOpen(true)}><Menu size={30} /></button>
           </div>
         </div>
       </header>
 
-      <div className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] transition-opacity ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} onClick={() => setIsMenuOpen(false)} />
-      <div className={`fixed top-0 right-0 h-full w-[350px] sm:w-[450px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <button className="absolute top-8 right-8 w-11 h-11 border border-gray-200 rounded-full flex items-center justify-center text-gray-400" onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
+      <div className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} onClick={() => setIsMenuOpen(false)} />
+      <div className={`fixed top-0 right-0 h-full w-[320px] sm:w-[400px] bg-white z-[110] shadow-2xl p-10 flex flex-col transform transition-transform duration-500 ease-in-out ${isMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <button className="absolute top-8 right-8 w-11 h-11 border border-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all" onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
         <nav className="flex flex-col gap-10 mt-24">
-          <Link href="/" className="text-[20px] font-bold text-gray-900" onClick={() => setIsMenuOpen(false)}>Գլխավոր</Link>
-          <Link href="/sales" className="text-[20px] font-bold text-gray-800" onClick={() => setIsMenuOpen(false)}>Զեղչեր</Link>
-          <Link href="/service" className="text-[20px] font-bold text-orange-500" onClick={() => setIsMenuOpen(false)}>Ծառայություններ</Link>
-          <Link href="/about_us" className="text-[20px] font-bold text-gray-800" onClick={() => setIsMenuOpen(false)}>Մեր մասին</Link>
+          <Link href="/" className="text-xl font-black text-gray-900 uppercase italic tracking-tighter" onClick={() => setIsMenuOpen(false)}>Գլխավոր</Link>
+          <Link href="/sales" className="text-xl font-black text-gray-800 uppercase italic tracking-tighter" onClick={() => setIsMenuOpen(false)}>Զեղչեր</Link>
+          <Link href="/service" className="text-xl font-black text-orange-500 uppercase italic tracking-tighter" onClick={() => setIsMenuOpen(false)}>Ծառայություններ</Link>
+          <Link href="/about_us" className="text-xl font-black text-gray-800 uppercase italic tracking-tighter" onClick={() => setIsMenuOpen(false)}>Մեր մասին</Link>
           <hr className="border-gray-100 my-2" />
           {user ? (
             <div className="flex flex-col gap-6">
-              <Link href="/userPage" className="text-[20px] font-bold text-gray-900" onClick={() => setIsMenuOpen(false)}>{user.name}</Link>
-              <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="text-[20px] font-bold text-red-500 text-left">Դուրս գալ</button>
+              <Link href="/userPage" className="text-xl font-black text-gray-900 uppercase italic tracking-tighter" onClick={() => setIsMenuOpen(false)}>{user.name}</Link>
+              <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="text-xl font-black text-red-500 text-left uppercase italic tracking-tighter">Ելք</button>
             </div>
           ) : (
-            <Link href="/login" className="text-[20px] font-bold text-gray-800" onClick={() => setIsMenuOpen(false)}>Մուտք</Link>
+            <Link href="/login" className="text-xl font-black text-gray-800 uppercase italic tracking-tighter" onClick={() => setIsMenuOpen(false)}>Մուտք</Link>
           )}
         </nav>
       </div>
@@ -187,7 +187,7 @@ export default function Service() {
               <SwiperSlide key={cat.name}>
                 <div onClick={() => setActiveTab(cat.name)} className='flex flex-col items-center cursor-pointer group/item'>
                   <span className={`mb-3 transition-colors ${activeTab === cat.name ? 'text-orange-500' : 'text-gray-400 group-hover/item:text-black'}`}>{cat.icon}</span>
-                  <p className={`text-[14px] font-medium transition-colors ${activeTab === cat.name ? 'text-black' : 'text-gray-500'}`}>{cat.name}</p>
+                  <p className={`text-[12px] font-black uppercase tracking-widest transition-colors ${activeTab === cat.name ? 'text-black' : 'text-gray-400'}`}>{cat.name}</p>
                   <div className={`h-[3px] bg-orange-500 transition-all duration-300 mt-2 rounded-full ${activeTab === cat.name ? 'w-10 opacity-100' : 'w-0 opacity-0'}`} />
                 </div>
               </SwiperSlide>
